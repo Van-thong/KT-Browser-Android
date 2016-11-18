@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="56dp"
     android:gravity="center_vertical"
-    android:orientation="horizontal" >
+    android:orientation="horizontal">
 
     <ImageView
         android:id="@+id/faviconBookmark"
@@ -12,8 +12,7 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:contentDescription="Favicon"
-        android:gravity="center_vertical" >
-    </ImageView>
+        android:gravity="center_vertical"></ImageView>
 
     <TextView
         android:id="@+id/textBookmark"

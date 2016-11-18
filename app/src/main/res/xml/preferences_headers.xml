@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
     <header
-        android:fragment="acr.browser.lightning.fragment.GeneralSettingsFragment"
-        android:title="@string/settings_general"/>
+        android:fragment="kttech.software.ktbrowser.fragment.GeneralSettingsFragment"
+        android:title="@string/settings_general" />
     <header
-        android:fragment="acr.browser.lightning.fragment.BookmarkSettingsFragment"
-        android:title="@string/bookmark_settings"/>
+        android:fragment="kttech.software.ktbrowser.fragment.BookmarkSettingsFragment"
+        android:title="@string/bookmark_settings" />
     <header
-        android:fragment="acr.browser.lightning.fragment.DisplaySettingsFragment"
-        android:title="@string/settings_display"/>
+        android:fragment="kttech.software.ktbrowser.fragment.DisplaySettingsFragment"
+        android:title="@string/settings_display" />
     <header
-        android:fragment="acr.browser.lightning.fragment.PrivacySettingsFragment"
-        android:title="@string/settings_privacy"/>
+        android:fragment="kttech.software.ktbrowser.fragment.PrivacySettingsFragment"
+        android:title="@string/settings_privacy" />
     <header
-        android:fragment="acr.browser.lightning.fragment.AdvancedSettingsFragment"
-        android:title="@string/settings_advanced"/>
+        android:fragment="kttech.software.ktbrowser.fragment.AdvancedSettingsFragment"
+        android:title="@string/settings_advanced" />
     <header
-        android:fragment="acr.browser.lightning.fragment.AboutSettingsFragment"
+        android:fragment="kttech.software.ktbrowser.fragment.AboutSettingsFragment"
         android:summary="@string/settings_about_explain"
-        android:title="@string/settings_about"/>
+        android:title="@string/settings_about" />
     <header
         android:summary="@string/faq_description"
         android:title="@string/faq">
@@ -27,10 +27,10 @@
             android:data="http://acrdevelopment.org/lightning/faq">
             <extra
                 android:name="SOURCE"
-                android:value="SELF"/>
+                android:value="SELF" />
         </intent>
     </header>
     <header
-        android:fragment="acr.browser.lightning.fragment.DebugSettingsFragment"
-        android:title="@string/debug_title"/>
+        android:fragment="kttech.software.ktbrowser.fragment.DebugSettingsFragment"
+        android:title="@string/debug_title" />
 </preference-headers>

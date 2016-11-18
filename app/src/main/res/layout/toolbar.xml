@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    android:id="@+id/toolbar_layout"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:custom="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/toolbar_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/colorPrimary"
@@ -13,7 +12,7 @@
     <FrameLayout
         android:id="@+id/tabs_toolbar_container"
         android:layout_width="match_parent"
-        android:layout_height="30dp"/>
+        android:layout_height="30dp" />
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
@@ -24,7 +23,7 @@
         android:paddingRight="0dp"
         android:paddingTop="2dp"
         custom:contentInsetEnd="0dp"
-        custom:contentInsetStart="0dp"/>
+        custom:contentInsetStart="0dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -37,7 +36,7 @@
             android:layout_height="2dp"
             android:background="@android:color/transparent"
             custom:bidirectionalAnimate="false"
-            custom:progressColor="?attr/colorAccent"/>
+            custom:progressColor="?attr/colorAccent" />
     </LinearLayout>
 
 </LinearLayout>
