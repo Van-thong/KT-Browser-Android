@@ -74,33 +74,45 @@ public class LightningView {
     private static final int API = android.os.Build.VERSION.SDK_INT;
     private static final int SCROLL_UP_THRESHOLD = Utils.dpToPx(10);
     private static final float[] sNegativeColorArray = {
-        -1.0f, 0, 0, 0, 255, // red
-        0, -1.0f, 0, 0, 255, // green
-        0, 0, -1.0f, 0, 255, // blue
-        0, 0, 0, 1.0f, 0 // alpha
+            -1.0f, 0, 0, 0, 255, // red
+            0, -1.0f, 0, 0, 255, // green
+            0, 0, -1.0f, 0, 255, // blue
+            0, 0, 0, 1.0f, 0 // alpha
     };
     private static final float[] sIncreaseContrastColorArray = {
-        2.0f, 0, 0, 0, -160.f, // red
-        0, 2.0f, 0, 0, -160.f, // green
-        0, 0, 2.0f, 0, -160.f, // blue
-        0, 0, 0, 1.0f, 0 // alpha
+            2.0f, 0, 0, 0, -160.f, // red
+            0, 2.0f, 0, 0, -160.f, // green
+            0, 0, 2.0f, 0, -160.f, // blue
+            0, 0, 0, 1.0f, 0 // alpha
     };
     private static String sHomepage;
     private static String sDefaultUserAgent;
     private static float sMaxFling;
-    @NonNull private final LightningViewTitle mTitle;
-    @NonNull private final UIController mUIController;
-    @NonNull private final GestureDetector mGestureDetector;
-    @NonNull private final Activity mActivity;
-    @NonNull private final Paint mPaint = new Paint();
+    @NonNull
+    private final LightningViewTitle mTitle;
+    @NonNull
+    private final UIController mUIController;
+    @NonNull
+    private final GestureDetector mGestureDetector;
+    @NonNull
+    private final Activity mActivity;
+    @NonNull
+    private final Paint mPaint = new Paint();
     private final boolean mIsIncognitoTab;
-    @NonNull private final WebViewHandler mWebViewHandler = new WebViewHandler(this);
-    @NonNull private final Map<String, String> mRequestHeaders = new ArrayMap<>();
-    @Inject Bus mEventBus;
-    @Inject PreferenceManager mPreferences;
-    @Inject LightningDialogBuilder mBookmarksDialogBuilder;
-    @Inject ProxyUtils mProxyUtils;
-    @Inject BookmarkManager mBookmarkManager;
+    @NonNull
+    private final WebViewHandler mWebViewHandler = new WebViewHandler(this);
+    @NonNull
+    private final Map<String, String> mRequestHeaders = new ArrayMap<>();
+    @Inject
+    Bus mEventBus;
+    @Inject
+    PreferenceManager mPreferences;
+    @Inject
+    LightningDialogBuilder mBookmarksDialogBuilder;
+    @Inject
+    ProxyUtils mProxyUtils;
+    @Inject
+    BookmarkManager mBookmarkManager;
     @Nullable
     private WebView mWebView;
     @Nullable
@@ -349,7 +361,7 @@ public class LightningView {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             CookieManager.getInstance().setAcceptThirdPartyCookies(mWebView,
-                !mPreferences.getBlockThirdPartyCookiesEnabled());
+                    !mPreferences.getBlockThirdPartyCookiesEnabled());
         }
     }
 
@@ -402,49 +414,52 @@ public class LightningView {
         }
 
         getPathObservable("appcache")
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.main())
-            .subscribe(new OnSubscribe<File>() {
-                @Override
-                public void onNext(File item) {
-                    settings.setAppCachePath(item.getPath());
-                }
-
-                @Override
-                public void onComplete() {}
-            });
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-            getPathObservable("geolocation")
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.main())
                 .subscribe(new OnSubscribe<File>() {
                     @Override
                     public void onNext(File item) {
-                        //noinspection deprecation
-                        settings.setGeolocationDatabasePath(item.getPath());
+                        settings.setAppCachePath(item.getPath());
                     }
 
                     @Override
-                    public void onComplete() {}
+                    public void onComplete() {
+                    }
                 });
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            getPathObservable("geolocation")
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.main())
+                    .subscribe(new OnSubscribe<File>() {
+                        @Override
+                        public void onNext(File item) {
+                            //noinspection deprecation
+                            settings.setGeolocationDatabasePath(item.getPath());
+                        }
+
+                        @Override
+                        public void onComplete() {
+                        }
+                    });
         }
 
         getPathObservable("databases")
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.main())
-            .subscribe(new OnSubscribe<File>() {
-                @Override
-                public void onNext(File item) {
-                    if (API < Build.VERSION_CODES.KITKAT) {
-                        //noinspection deprecation
-                        settings.setDatabasePath(item.getPath());
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.main())
+                .subscribe(new OnSubscribe<File>() {
+                    @Override
+                    public void onNext(File item) {
+                        if (API < Build.VERSION_CODES.KITKAT) {
+                            //noinspection deprecation
+                            settings.setDatabasePath(item.getPath());
+                        }
                     }
-                }
 
-                @Override
-                public void onComplete() {}
-            });
+                    @Override
+                    public void onComplete() {
+                    }
+                });
 
     }
 
@@ -699,7 +714,7 @@ public class LightningView {
                 break;
             case 1:
                 ColorMatrixColorFilter filterInvert = new ColorMatrixColorFilter(
-                    sNegativeColorArray);
+                        sNegativeColorArray);
                 mPaint.setColorFilter(filterInvert);
                 setHardwareRendering();
 
@@ -728,7 +743,7 @@ public class LightningView {
 
             case 4:
                 ColorMatrixColorFilter IncreaseHighContrast = new ColorMatrixColorFilter(
-                    sIncreaseContrastColorArray);
+                        sIncreaseContrastColorArray);
                 mPaint.setColorFilter(IncreaseHighContrast);
                 setHardwareRendering();
                 break;

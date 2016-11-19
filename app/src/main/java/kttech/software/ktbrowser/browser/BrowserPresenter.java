@@ -30,13 +30,17 @@ public class BrowserPresenter {
 
     private static final String TAG = BrowserPresenter.class.getSimpleName();
 
-    @NonNull private final TabsManager mTabsModel;
+    @NonNull
+    private final TabsManager mTabsModel;
     @NonNull
     private final BrowserView mView;
     private final boolean mIsIncognito;
-    @Inject PreferenceManager mPreferences;
-    @Inject Bus mEventBus;
-    @Nullable private LightningView mCurrentTab;
+    @Inject
+    PreferenceManager mPreferences;
+    @Inject
+    Bus mEventBus;
+    @Nullable
+    private LightningView mCurrentTab;
     private boolean mShouldClose;
 
     public BrowserPresenter(@NonNull BrowserView view, boolean isIncognito) {
@@ -60,16 +64,16 @@ public class BrowserPresenter {
      */
     public void setupTabs(@Nullable Intent intent) {
         mTabsModel.initializeTabs((Activity) mView, intent, mIsIncognito)
-            .subscribeOn(Schedulers.main())
-            .subscribe(new OnSubscribe<Void>() {
-                @Override
-                public void onComplete() {
-                    // At this point we always have at least a tab in the tab manager
-                    mView.notifyTabViewInitialized();
-                    mView.updateTabNumber(mTabsModel.size());
-                    tabChanged(mTabsModel.last());
-                }
-            });
+                .subscribeOn(Schedulers.main())
+                .subscribe(new OnSubscribe<Void>() {
+                    @Override
+                    public void onComplete() {
+                        // At this point we always have at least a tab in the tab manager
+                        mView.notifyTabViewInitialized();
+                        mView.updateTabNumber(mTabsModel.size());
+                        tabChanged(mTabsModel.last());
+                    }
+                });
     }
 
     /**
@@ -163,8 +167,8 @@ public class BrowserPresenter {
         boolean shouldClose = mShouldClose && isShown && Boolean.TRUE.equals(tabToDelete.getTag());
         final LightningView currentTab = mTabsModel.getCurrentTab();
         if (mTabsModel.size() == 1 && currentTab != null &&
-            (UrlUtils.isSpecialUrl(currentTab.getUrl()) ||
-                currentTab.getUrl().equals(mPreferences.getHomepage()))) {
+                (UrlUtils.isSpecialUrl(currentTab.getUrl()) ||
+                        currentTab.getUrl().equals(mPreferences.getHomepage()))) {
             mView.closeActivity();
             return;
         } else {

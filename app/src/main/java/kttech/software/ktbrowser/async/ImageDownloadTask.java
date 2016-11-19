@@ -25,11 +25,15 @@ import kttech.software.ktbrowser.utils.Utils;
 public class ImageDownloadTask extends AsyncTask<Void, Void, Bitmap> {
 
     private static final String TAG = ImageDownloadTask.class.getSimpleName();
-    @NonNull private final WeakReference<ImageView> mFaviconImage;
-    @NonNull private final Application mContext;
-    @NonNull private final HistoryItem mWeb;
+    @NonNull
+    private final WeakReference<ImageView> mFaviconImage;
+    @NonNull
+    private final Application mContext;
+    @NonNull
+    private final HistoryItem mWeb;
     private final String mUrl;
-    @NonNull private final Bitmap mDefaultBitmap;
+    @NonNull
+    private final Bitmap mDefaultBitmap;
 
     public ImageDownloadTask(@NonNull ImageView bmImage,
                              @NonNull HistoryItem web,

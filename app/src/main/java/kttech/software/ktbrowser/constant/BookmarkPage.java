@@ -34,11 +34,11 @@ public final class BookmarkPage extends AsyncTask<Void, Void, Void> {
     public static final String FILENAME = "bookmarks.html";
 
     private static final String HEADING_1 = "<!DOCTYPE html><html xmlns=http://www.w3.org/1999/xhtml>\n" +
-        "<head>\n" +
-        "<meta content=en-us http-equiv=Content-Language />\n" +
-        "<meta content='text/html; charset=utf-8' http-equiv=Content-Type />\n" +
-        "<meta name=viewport content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>\n" +
-        "<title>";
+            "<head>\n" +
+            "<meta content=en-us http-equiv=Content-Language />\n" +
+            "<meta content='text/html; charset=utf-8' http-equiv=Content-Type />\n" +
+            "<meta name=viewport content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>\n" +
+            "<title>";
 
     private static final String HEADING_2 = "</title>\n" +
             "</head>\n" +
@@ -55,10 +55,10 @@ public final class BookmarkPage extends AsyncTask<Void, Void, Void> {
     private static final String PART1 = "<div class=box><a href='";
 
     private static final String PART2 = "'></a>\n" +
-        "<div class=margin>\n" +
-        "<div class=box-content>\n" +
-        "<p class=ellipses>\n" +
-        "<img src='";
+            "<div class=margin>\n" +
+            "<div class=box-content>\n" +
+            "<p class=ellipses>\n" +
+            "<img src='";
 
     private static final String PART3 = "https://www.google.com/s2/favicons?domain=";
 
@@ -71,9 +71,11 @@ public final class BookmarkPage extends AsyncTask<Void, Void, Void> {
     private static final String FOLDER_ICON = "folder.png";
     private final Application mApp;
     private final BookmarkManager mManager;
-    @NonNull private final WeakReference<LightningView> mTabReference;
+    @NonNull
+    private final WeakReference<LightningView> mTabReference;
     private final Bitmap mFolderIcon;
-    @NonNull private final String mTitle;
+    @NonNull
+    private final String mTitle;
     private File mFilesDir;
     private File mCacheDir;
 

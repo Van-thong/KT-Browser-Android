@@ -6,7 +6,8 @@ import android.support.annotation.NonNull;
 
 public final class ResourceUtils {
 
-    private ResourceUtils() {}
+    private ResourceUtils() {
+    }
 
     public static int dimen(@NonNull Context context, @DimenRes int res) {
         return Math.round(context.getResources().getDimension(res));

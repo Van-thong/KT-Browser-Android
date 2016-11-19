@@ -12,7 +12,8 @@ import kttech.software.ktbrowser.utils.ThemeUtils;
 
 public abstract class ThemableSettingsActivity extends AppCompatPreferenceActivity {
 
-    @Inject PreferenceManager mPreferenceManager;
+    @Inject
+    PreferenceManager mPreferenceManager;
     private int mTheme;
 
     @Override

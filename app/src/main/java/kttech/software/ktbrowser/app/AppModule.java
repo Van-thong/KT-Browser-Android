@@ -16,7 +16,8 @@ import dagger.Provides;
 @Module
 public class AppModule {
     private final BrowserApp mApp;
-    @NonNull private final Bus mBus;
+    @NonNull
+    private final Bus mBus;
 
     public AppModule(BrowserApp app) {
         this.mApp = app;

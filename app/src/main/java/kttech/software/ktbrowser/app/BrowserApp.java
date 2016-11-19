@@ -30,8 +30,10 @@ public class BrowserApp extends Application {
     private static final Executor mIOThread = Executors.newSingleThreadExecutor();
     private static final Executor mTaskThread = Executors.newCachedThreadPool();
     private static AppComponent mAppComponent;
-    @Inject Bus mBus;
-    @Inject PreferenceManager mPreferenceManager;
+    @Inject
+    Bus mBus;
+    @Inject
+    PreferenceManager mPreferenceManager;
 
     @NonNull
     public static BrowserApp get(@NonNull Context context) {
@@ -76,13 +78,13 @@ public class BrowserApp extends Application {
         super.onCreate();
         if (BuildConfig.DEBUG) {
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-                .detectAll()
-                .penaltyLog()
-                .build());
+                    .detectAll()
+                    .penaltyLog()
+                    .build());
             StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-                .detectAll()
-                .penaltyLog()
-                .build());
+                    .detectAll()
+                    .penaltyLog()
+                    .build());
         }
 
         final Thread.UncaughtExceptionHandler defaultHandler = Thread.getDefaultUncaughtExceptionHandler();

@@ -23,11 +23,11 @@ import kttech.software.ktbrowser.constant.Constants;
 public class IntentUtils {
 
     private static final Pattern ACCEPTED_URI_SCHEMA = Pattern.compile("(?i)"
-        + // switch on case insensitive matching
-        '('
-        + // begin group for schema
-        "(?:http|https|file)://" + "|(?:inline|data|about|javascript):" + "|(?:.*:.*@)"
-        + ')' + "(.*)");
+            + // switch on case insensitive matching
+            '('
+            + // begin group for schema
+            "(?:http|https|file)://" + "|(?:inline|data|about|javascript):" + "|(?:.*:.*@)"
+            + ')' + "(.*)");
     private final Activity mActivity;
 
     public IntentUtils(Activity activity) {
@@ -53,7 +53,7 @@ public class IntentUtils {
             String packagename = intent.getPackage();
             if (packagename != null) {
                 intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=pname:"
-                    + packagename));
+                        + packagename));
                 intent.addCategory(Intent.CATEGORY_BROWSABLE);
                 mActivity.startActivity(intent);
                 return true;
@@ -86,7 +86,7 @@ public class IntentUtils {
     private boolean isSpecializedHandlerAvailable(Intent intent) {
         PackageManager pm = mActivity.getPackageManager();
         List<ResolveInfo> handlers = pm.queryIntentActivities(intent,
-            PackageManager.GET_RESOLVED_FILTER);
+                PackageManager.GET_RESOLVED_FILTER);
         if (handlers == null || handlers.isEmpty()) {
             return false;
         }

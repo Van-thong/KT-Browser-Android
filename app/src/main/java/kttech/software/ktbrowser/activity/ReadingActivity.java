@@ -57,7 +57,8 @@ public class ReadingActivity extends AppCompatActivity {
     TextView mTitle;
     @Bind(R.id.textViewBody)
     TextView mBody;
-    @Inject PreferenceManager mPreferences;
+    @Inject
+    PreferenceManager mPreferences;
     private boolean mInvert;
     private String mUrl = null;
     private int mTextSize;

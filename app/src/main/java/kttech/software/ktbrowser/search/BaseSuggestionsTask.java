@@ -34,10 +34,14 @@ abstract class BaseSuggestionsTask {
     private static final String TAG = BaseSuggestionsTask.class.getSimpleName();
     private static final long INTERVAL_DAY = TimeUnit.DAYS.toMillis(1);
     private static final String DEFAULT_LANGUAGE = "en";
-    @Nullable private static String sLanguage;
-    @NonNull private final SuggestionsResult mResultCallback;
-    @NonNull private final Application mApplication;
-    @NonNull private String mQuery;
+    @Nullable
+    private static String sLanguage;
+    @NonNull
+    private final SuggestionsResult mResultCallback;
+    @NonNull
+    private final Application mApplication;
+    @NonNull
+    private String mQuery;
 
     BaseSuggestionsTask(@NonNull String query,
                         @NonNull Application application,
@@ -137,7 +141,7 @@ abstract class BaseSuggestionsTask {
             connection.setRequestProperty("Accept-Charset", getEncoding());
             connection.connect();
             if (connection.getResponseCode() >= HttpURLConnection.HTTP_MULT_CHOICE ||
-                connection.getResponseCode() < HttpURLConnection.HTTP_OK) {
+                    connection.getResponseCode() < HttpURLConnection.HTTP_OK) {
                 Log.e(TAG, "Search API Responded with code: " + connection.getResponseCode());
                 connection.disconnect();
                 return cacheFile;

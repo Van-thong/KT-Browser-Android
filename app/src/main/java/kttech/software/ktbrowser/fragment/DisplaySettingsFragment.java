@@ -210,15 +210,15 @@ public class DisplaySettingsFragment extends LightningPreferenceFragment impleme
             }
         });
         picker.setPositiveButton(getResources().getString(R.string.action_ok),
-            new DialogInterface.OnClickListener() {
+                new DialogInterface.OnClickListener() {
 
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    if (mCurrentTheme != mPreferenceManager.getUseTheme()) {
-                        getActivity().onBackPressed();
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (mCurrentTheme != mPreferenceManager.getUseTheme()) {
+                            getActivity().onBackPressed();
+                        }
                     }
-                }
-            });
+                });
         picker.setOnCancelListener(new DialogInterface.OnCancelListener() {
             @Override
             public void onCancel(DialogInterface dialog) {
@@ -235,7 +235,9 @@ public class DisplaySettingsFragment extends LightningPreferenceFragment impleme
 
         private final TextView sample;
 
-        public TextSeekBarListener(TextView sample) {this.sample = sample;}
+        public TextSeekBarListener(TextView sample) {
+            this.sample = sample;
+        }
 
         @Override
         public void onProgressChanged(SeekBar view, int size, boolean user) {

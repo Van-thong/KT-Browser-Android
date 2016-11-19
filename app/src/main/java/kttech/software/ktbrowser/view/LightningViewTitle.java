@@ -16,12 +16,16 @@ import kttech.software.ktbrowser.utils.Utils;
  */
 class LightningViewTitle {
 
-    @Nullable private static Bitmap DEFAULT_DARK_ICON;
-    @Nullable private static Bitmap DEFAULT_LIGHT_ICON;
+    @Nullable
+    private static Bitmap DEFAULT_DARK_ICON;
+    @Nullable
+    private static Bitmap DEFAULT_LIGHT_ICON;
     @NonNull
     private final Context mContext;
-    @Nullable private Bitmap mFavicon = null;
-    @NonNull private String mTitle;
+    @Nullable
+    private Bitmap mFavicon = null;
+    @NonNull
+    private String mTitle;
 
     public LightningViewTitle(@NonNull Context context) {
         mContext = context;

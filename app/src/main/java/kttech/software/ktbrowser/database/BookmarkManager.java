@@ -50,11 +50,13 @@ public class BookmarkManager {
     private static final String ORDER = "order";
     private static final String FILE_BOOKMARKS = "bookmarks.dat";
 
-    @NonNull private final String DEFAULT_BOOKMARK_TITLE;
+    @NonNull
+    private final String DEFAULT_BOOKMARK_TITLE;
     @NonNull
     private final ExecutorService mExecutor;
     private Map<String, HistoryItem> mBookmarksMap;
-    @NonNull private String mCurrentFolder = "";
+    @NonNull
+    private String mCurrentFolder = "";
     private File mFilesDir;
 
     @Inject
@@ -224,20 +226,20 @@ public class BookmarkManager {
     public synchronized void exportBookmarks(@NonNull Activity activity) {
         List<HistoryItem> bookmarkList = getAllBookmarks(true);
         File bookmarksExport = new File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "BookmarksExport.txt");
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                "BookmarksExport.txt");
         int counter = 0;
         while (bookmarksExport.exists()) {
             counter++;
             bookmarksExport = new File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                "BookmarksExport-" + counter + ".txt");
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                    "BookmarksExport-" + counter + ".txt");
         }
         BufferedWriter bookmarkWriter = null;
         try {
             //noinspection IOResourceOpenedButNotSafelyClosed
             bookmarkWriter = new BufferedWriter(new FileWriter(bookmarksExport,
-                false));
+                    false));
             JSONObject object = new JSONObject();
             for (HistoryItem item : bookmarkList) {
                 object.put(TITLE, item.getTitle());
@@ -248,7 +250,7 @@ public class BookmarkManager {
                 bookmarkWriter.newLine();
             }
             Utils.showSnackbar(activity, activity.getString(R.string.bookmark_export_path)
-                + ' ' + bookmarksExport.getPath());
+                    + ' ' + bookmarksExport.getPath());
         } catch (@NonNull IOException | JSONException e) {
             e.printStackTrace();
         } finally {
@@ -445,7 +447,7 @@ public class BookmarkManager {
             }
             if (o1.isFolder() == o2.isFolder()) {
                 return o1.getTitle().toLowerCase(Locale.getDefault())
-                    .compareTo(o2.getTitle().toLowerCase(Locale.getDefault()));
+                        .compareTo(o2.getTitle().toLowerCase(Locale.getDefault()));
 
             } else {
                 return o1.isFolder() ? 1 : -1;

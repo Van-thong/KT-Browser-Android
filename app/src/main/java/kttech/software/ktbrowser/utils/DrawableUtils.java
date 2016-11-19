@@ -73,9 +73,9 @@ public class DrawableUtils {
         int endB = endValue & 0xff;
 
         return (startA + (int) (fraction * (endA - startA))) << 24 |
-            (startR + (int) (fraction * (endR - startR))) << 16 |
-            (startG + (int) (fraction * (endG - startG))) << 8 |
-            (startB + (int) (fraction * (endB - startB)));
+                (startR + (int) (fraction * (endR - startR))) << 16 |
+                (startG + (int) (fraction * (endG - startG))) << 8 |
+                (startB + (int) (fraction * (endB - startB)));
     }
 
     public static Drawable resolveDrawableAttribute(@NonNull Context context, @AttrRes int res) {

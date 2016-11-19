@@ -30,7 +30,7 @@ import kttech.software.ktbrowser.constant.Constants;
 /**
  * This class is not thread safe. Use one new instance every time due to
  * encoding variable.
- * 
+ *
  * @author Peter Karich
  */
 public class Converter {
@@ -164,9 +164,8 @@ public class Converter {
     /**
      * reads bytes off the string and returns a string
      *
-     * @param is input stream to read
-     * @param maxBytes
-     *            The max bytes that we want to read from the input stream
+     * @param is       input stream to read
+     * @param maxBytes The max bytes that we want to read from the input stream
      * @return String
      */
     private String streamToString(InputStream is, int maxBytes, String enc) {

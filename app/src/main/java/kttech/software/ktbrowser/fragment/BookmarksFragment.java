@@ -65,11 +65,14 @@ public class BookmarksFragment extends Fragment implements View.OnClickListener,
     // Bookmarks
     private final List<HistoryItem> mBookmarks = new ArrayList<>();
     // Managers
-    @Inject BookmarkManager mBookmarkManager;
+    @Inject
+    BookmarkManager mBookmarkManager;
     // Event bus
-    @Inject Bus mEventBus;
+    @Inject
+    Bus mEventBus;
     // Dialog builder
-    @Inject LightningDialogBuilder mBookmarksDialogBuilder;
+    @Inject
+    LightningDialogBuilder mBookmarksDialogBuilder;
     private final OnItemLongClickListener mItemLongClickListener = new OnItemLongClickListener() {
         @Override
         public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
@@ -78,7 +81,8 @@ public class BookmarksFragment extends Fragment implements View.OnClickListener,
             return true;
         }
     };
-    @Inject PreferenceManager mPreferenceManager;
+    @Inject
+    PreferenceManager mPreferenceManager;
     private TabsManager mTabsManager;
     private UIController mUiController;
     // Adapter
@@ -133,7 +137,7 @@ public class BookmarksFragment extends Fragment implements View.OnClickListener,
         mWebpageBitmap = ThemeUtils.getThemedBitmap(context, R.drawable.ic_webpage, darkTheme);
         mFolderBitmap = ThemeUtils.getThemedBitmap(context, R.drawable.ic_folder, darkTheme);
         mIconColor = darkTheme ? ThemeUtils.getIconDarkThemeColor(context) :
-            ThemeUtils.getIconLightThemeColor(context);
+                ThemeUtils.getIconLightThemeColor(context);
     }
 
     private TabsManager getTabsManager() {
@@ -177,13 +181,13 @@ public class BookmarksFragment extends Fragment implements View.OnClickListener,
         setupNavigationButton(view, R.id.action_toggle_desktop, R.id.icon_desktop);
 
         initBookmarkManager().subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.main())
-            .subscribe(new OnSubscribe<BookmarkViewAdapter>() {
-                @Override
-                public void onNext(@Nullable BookmarkViewAdapter item) {
-                    mBookmarksListView.setAdapter(mBookmarkAdapter);
-                }
-            });
+                .observeOn(Schedulers.main())
+                .subscribe(new OnSubscribe<BookmarkViewAdapter>() {
+                    @Override
+                    public void onNext(@Nullable BookmarkViewAdapter item) {
+                        mBookmarksListView.setAdapter(mBookmarkAdapter);
+                    }
+                });
         return view;
     }
 
@@ -208,7 +212,7 @@ public class BookmarksFragment extends Fragment implements View.OnClickListener,
         mWebpageBitmap = ThemeUtils.getThemedBitmap(activity, R.drawable.ic_webpage, darkTheme);
         mFolderBitmap = ThemeUtils.getThemedBitmap(activity, R.drawable.ic_folder, darkTheme);
         mIconColor = darkTheme ? ThemeUtils.getIconDarkThemeColor(activity) :
-            ThemeUtils.getIconLightThemeColor(activity);
+                ThemeUtils.getIconLightThemeColor(activity);
     }
 
     private void updateBookmarkIndicator(final String url) {
@@ -382,7 +386,7 @@ public class BookmarksFragment extends Fragment implements View.OnClickListener,
             } else if (web.getBitmap() == null) {
                 holder.favicon.setImageBitmap(mWebpageBitmap);
                 new ImageDownloadTask(holder.favicon, web, mWebpageBitmap, BrowserApp.get(context))
-                    .executeOnExecutor(AsyncExecutor.getInstance());
+                        .executeOnExecutor(AsyncExecutor.getInstance());
             } else {
                 holder.favicon.setImageBitmap(web.getBitmap());
             }

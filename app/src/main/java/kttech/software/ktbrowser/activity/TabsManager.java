@@ -54,11 +54,16 @@ public class TabsManager {
 
     private final List<LightningView> mTabList = new ArrayList<>(1);
     private final List<Runnable> mPostInitializationWorkList = new ArrayList<>();
-    @Inject PreferenceManager mPreferenceManager;
-    @Inject BookmarkManager mBookmarkManager;
-    @Inject HistoryDatabase mHistoryManager;
-    @Inject Bus mEventBus;
-    @Inject Application mApp;
+    @Inject
+    PreferenceManager mPreferenceManager;
+    @Inject
+    BookmarkManager mBookmarkManager;
+    @Inject
+    HistoryDatabase mHistoryManager;
+    @Inject
+    Bus mEventBus;
+    @Inject
+    Application mApp;
     @Nullable
     private LightningView mCurrentTab;
     @Nullable
@@ -145,7 +150,7 @@ public class TabsManager {
                                  @NonNull final Subscriber subscriber) {
 
         restoreState().subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.main()).subscribe(new OnSubscribe<Bundle>() {
+                .observeOn(Schedulers.main()).subscribe(new OnSubscribe<Bundle>() {
             @Override
             public void onNext(Bundle item) {
                 LightningView tab = newTab(activity, "", false);
@@ -169,25 +174,25 @@ public class TabsManager {
                     if (url.startsWith(Constants.FILE)) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
                         Dialog dialog = builder.setCancelable(true)
-                            .setTitle(R.string.title_warning)
-                            .setMessage(R.string.message_blocked_local)
-                            .setOnDismissListener(new DialogInterface.OnDismissListener() {
-                                @Override
-                                public void onDismiss(DialogInterface dialog) {
-                                    if (mTabList.isEmpty()) {
-                                        newTab(activity, null, false);
+                                .setTitle(R.string.title_warning)
+                                .setMessage(R.string.message_blocked_local)
+                                .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                    @Override
+                                    public void onDismiss(DialogInterface dialog) {
+                                        if (mTabList.isEmpty()) {
+                                            newTab(activity, null, false);
+                                        }
+                                        finishInitialization();
+                                        subscriber.onComplete();
                                     }
-                                    finishInitialization();
-                                    subscriber.onComplete();
-                                }
-                            })
-                            .setNegativeButton(android.R.string.cancel, null)
-                            .setPositiveButton(R.string.action_open, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    newTab(activity, url, false);
-                                }
-                            }).show();
+                                })
+                                .setNegativeButton(android.R.string.cancel, null)
+                                .setPositiveButton(R.string.action_open, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        newTab(activity, url, false);
+                                    }
+                                }).show();
                         BrowserDialog.setDialogSize(activity, dialog);
                     } else {
                         newTab(activity, url, false);

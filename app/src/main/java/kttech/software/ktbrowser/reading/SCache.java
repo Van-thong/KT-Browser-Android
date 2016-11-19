@@ -16,7 +16,6 @@
 package kttech.software.ktbrowser.reading;
 
 /**
- * 
  * @author Peter Karich
  */
 public interface SCache {

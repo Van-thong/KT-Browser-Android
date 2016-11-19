@@ -15,7 +15,8 @@ import kttech.software.ktbrowser.download.DownloadHandler;
 public class PreferenceManager {
 
     private static final String PREFERENCES = "settings";
-    @NonNull private final SharedPreferences mPrefs;
+    @NonNull
+    private final SharedPreferences mPrefs;
 
     @Inject
     PreferenceManager(@NonNull final Context context) {

@@ -4,7 +4,7 @@ import org.jsoup.nodes.Element;
 
 /**
  * Class which encapsulates the data from an image found under an element
- * 
+ *
  * @author Chris Alexander, chris@chris-alexander.co.uk
  */
 class ImageResult {
@@ -19,7 +19,7 @@ class ImageResult {
     public Element element;
 
     public ImageResult(String src, Integer weight, String title, int height, int width, String alt,
-            boolean noFollow) {
+                       boolean noFollow) {
         this.src = src;
         this.weight = weight;
         this.title = title;

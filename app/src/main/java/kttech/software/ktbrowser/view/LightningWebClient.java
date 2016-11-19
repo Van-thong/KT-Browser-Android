@@ -48,13 +48,19 @@ import kttech.software.ktbrowser.utils.Utils;
 
 public class LightningWebClient extends WebViewClient {
 
-    @NonNull private final Activity mActivity;
-    @NonNull private final LightningView mLightningView;
-    @NonNull private final UIController mUIController;
-    @NonNull private final IntentUtils mIntentUtils;
+    @NonNull
+    private final Activity mActivity;
+    @NonNull
+    private final LightningView mLightningView;
+    @NonNull
+    private final UIController mUIController;
+    @NonNull
+    private final IntentUtils mIntentUtils;
 
-    @Inject ProxyUtils mProxyUtils;
-    @Inject AdBlock mAdBlock;
+    @Inject
+    ProxyUtils mProxyUtils;
+    @Inject
+    AdBlock mAdBlock;
     private volatile boolean mIsRunning = false;
     private float mZoomScale = 0.0f;
 
@@ -132,7 +138,7 @@ public class LightningWebClient extends WebViewClient {
             mLightningView.getTitleInfo().setTitle(view.getTitle());
         }
         if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT &&
-            mLightningView.getInvertePage()) {
+                mLightningView.getInvertePage()) {
             view.evaluateJavascript(Constants.JAVASCRIPT_INVERT_PAGE, null);
         }
         mUIController.tabChanged(mLightningView);
@@ -170,24 +176,24 @@ public class LightningWebClient extends WebViewClient {
         builder.setTitle(mActivity.getString(R.string.title_sign_in));
         builder.setView(passLayout);
         builder.setCancelable(true)
-            .setPositiveButton(mActivity.getString(R.string.title_sign_in),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        String user = name.getText().toString();
-                        String pass = password.getText().toString();
-                        handler.proceed(user.trim(), pass.trim());
-                        Log.d(Constants.TAG, "Request Login");
+                .setPositiveButton(mActivity.getString(R.string.title_sign_in),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                String user = name.getText().toString();
+                                String pass = password.getText().toString();
+                                handler.proceed(user.trim(), pass.trim());
+                                Log.d(Constants.TAG, "Request Login");
 
-                    }
-                })
-            .setNegativeButton(mActivity.getString(R.string.action_cancel),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        handler.cancel();
-                    }
-                });
+                            }
+                        })
+                .setNegativeButton(mActivity.getString(R.string.action_cancel),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                handler.cancel();
+                            }
+                        });
         AlertDialog alert = builder.create();
         alert.show();
         BrowserDialog.setDialogSize(mActivity, alert);
@@ -197,7 +203,7 @@ public class LightningWebClient extends WebViewClient {
     @Override
     public void onScaleChanged(@NonNull final WebView view, final float oldScale, final float newScale) {
         if (view.isShown() && mLightningView.mPreferences.getTextReflowEnabled() &&
-            Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
             if (mIsRunning)
                 return;
             float changeInPercent = Math.abs(100 - 100 / mZoomScale * newScale);
@@ -228,26 +234,26 @@ public class LightningWebClient extends WebViewClient {
             stringBuilder.append(" - ").append(mActivity.getString(messageCode)).append('\n');
         }
         String alertMessage =
-            mActivity.getString(R.string.message_insecure_connection, stringBuilder.toString());
+                mActivity.getString(R.string.message_insecure_connection, stringBuilder.toString());
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
         builder.setTitle(mActivity.getString(R.string.title_warning));
         builder.setMessage(alertMessage)
-            .setCancelable(true)
-            .setPositiveButton(mActivity.getString(R.string.action_yes),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        handler.proceed();
-                    }
-                })
-            .setNegativeButton(mActivity.getString(R.string.action_no),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        handler.cancel();
-                    }
-                });
+                .setCancelable(true)
+                .setPositiveButton(mActivity.getString(R.string.action_yes),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                handler.proceed();
+                            }
+                        })
+                .setNegativeButton(mActivity.getString(R.string.action_no),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                handler.cancel();
+                            }
+                        });
         Dialog dialog = builder.show();
         BrowserDialog.setDialogSize(mActivity, dialog);
     }
@@ -257,21 +263,21 @@ public class LightningWebClient extends WebViewClient {
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
         builder.setTitle(mActivity.getString(R.string.title_form_resubmission));
         builder.setMessage(mActivity.getString(R.string.message_form_resubmission))
-            .setCancelable(true)
-            .setPositiveButton(mActivity.getString(R.string.action_yes),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        resend.sendToTarget();
-                    }
-                })
-            .setNegativeButton(mActivity.getString(R.string.action_no),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        dontResend.sendToTarget();
-                    }
-                });
+                .setCancelable(true)
+                .setPositiveButton(mActivity.getString(R.string.action_yes),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                resend.sendToTarget();
+                            }
+                        })
+                .setNegativeButton(mActivity.getString(R.string.action_no),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                dontResend.sendToTarget();
+                            }
+                        });
         AlertDialog alert = builder.create();
         alert.show();
         BrowserDialog.setDialogSize(mActivity, alert);
@@ -343,7 +349,7 @@ public class LightningWebClient extends WebViewClient {
         if (url.startsWith("mailto:")) {
             MailTo mailTo = MailTo.parse(url);
             Intent i = Utils.newEmailIntent(mailTo.getTo(), mailTo.getSubject(),
-                mailTo.getBody(), mailTo.getCc());
+                    mailTo.getBody(), mailTo.getCc());
             mActivity.startActivity(i);
             view.reload();
             return true;

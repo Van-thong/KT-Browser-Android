@@ -13,7 +13,8 @@ import kttech.software.ktbrowser.preference.PreferenceManager;
 
 public abstract class ThemableBrowserActivity extends AppCompatActivity {
 
-    @Inject PreferenceManager mPreferences;
+    @Inject
+    PreferenceManager mPreferences;
 
     private int mTheme;
     private boolean mShowTabsInDrawer;

@@ -94,9 +94,9 @@ class FetchUrlMimeType extends Thread {
         String filename = "";
         if (mimeType != null) {
             if (mimeType.equalsIgnoreCase("text/plain")
-                || mimeType.equalsIgnoreCase("application/octet-stream")) {
+                    || mimeType.equalsIgnoreCase("application/octet-stream")) {
                 String newMimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(
-                    DownloadHandler.guessFileExtension(mUri));
+                        DownloadHandler.guessFileExtension(mUri));
                 if (newMimeType != null) {
                     mRequest.setMimeType(newMimeType);
                 }
@@ -107,7 +107,7 @@ class FetchUrlMimeType extends Thread {
 
         // Start the download
         DownloadManager manager = (DownloadManager) mContext
-            .getSystemService(Context.DOWNLOAD_SERVICE);
+                .getSystemService(Context.DOWNLOAD_SERVICE);
         try {
             manager.enqueue(mRequest);
         } catch (IllegalArgumentException e) {

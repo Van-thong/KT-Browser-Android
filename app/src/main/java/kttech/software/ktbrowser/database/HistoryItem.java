@@ -28,7 +28,8 @@ public class HistoryItem implements Comparable<HistoryItem> {
     private int mOrder = 0;
     private boolean mIsFolder = false;
 
-    public HistoryItem() {}
+    public HistoryItem() {
+    }
 
     public HistoryItem(@NonNull HistoryItem item) {
         this.mUrl = item.mUrl;

@@ -34,9 +34,12 @@ class LightningChromeClient extends WebChromeClient {
 
     private static final String[] PERMISSIONS = new String[]{Manifest.permission.ACCESS_FINE_LOCATION};
 
-    @NonNull private final Activity mActivity;
-    @NonNull private final LightningView mLightningView;
-    @NonNull private final UIController mUIController;
+    @NonNull
+    private final Activity mActivity;
+    @NonNull
+    private final LightningView mLightningView;
+    @NonNull
+    private final UIController mUIController;
 
     LightningChromeClient(@NonNull Activity activity, @NonNull LightningView lightningView) {
         Preconditions.checkNonNull(activity);

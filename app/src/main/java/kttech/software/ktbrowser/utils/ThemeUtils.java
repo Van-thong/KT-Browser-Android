@@ -82,7 +82,7 @@ public class ThemeUtils {
         Drawable drawable = getVectorDrawable(context, drawableId);
 
         Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
-            drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+                drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
         drawable.draw(canvas);
@@ -116,7 +116,7 @@ public class ThemeUtils {
     @NonNull
     public static ColorDrawable getSelectedBackground(@NonNull Context context, boolean dark) {
         @ColorInt final int color = (dark) ? ContextCompat.getColor(context, R.color.selected_dark) :
-            ContextCompat.getColor(context, R.color.selected_light);
+                ContextCompat.getColor(context, R.color.selected_light);
         return new ColorDrawable(color);
     }
 

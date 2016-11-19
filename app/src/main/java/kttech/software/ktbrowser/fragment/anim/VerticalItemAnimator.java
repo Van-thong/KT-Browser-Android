@@ -196,25 +196,25 @@ public class VerticalItemAnimator extends SimpleItemAnimator {
         mAddAnimations.add(holder);
         animation.alpha(1).translationX(0).setDuration(getAddDuration())
                 .setInterpolator(new BezierDecelerateInterpolator()).setListener(new VpaListenerAdapter() {
-                    @Override
-                    public void onAnimationStart(View view) {
-                        dispatchAddStarting(holder);
-                    }
+            @Override
+            public void onAnimationStart(View view) {
+                dispatchAddStarting(holder);
+            }
 
-                    @Override
-                    public void onAnimationCancel(View view) {
-                        ViewCompat.setAlpha(view, 1);
-                        ViewCompat.setTranslationX(view, 0);
-                    }
+            @Override
+            public void onAnimationCancel(View view) {
+                ViewCompat.setAlpha(view, 1);
+                ViewCompat.setTranslationX(view, 0);
+            }
 
-                    @Override
-                    public void onAnimationEnd(View view) {
-                        animation.setListener(null);
-                        dispatchAddFinished(holder);
-                        mAddAnimations.remove(holder);
-                        dispatchFinishedWhenDone();
-                    }
-                }).start();
+            @Override
+            public void onAnimationEnd(View view) {
+                animation.setListener(null);
+                dispatchAddFinished(holder);
+                mAddAnimations.remove(holder);
+                dispatchFinishedWhenDone();
+            }
+        }).start();
     }
 
     @Override
@@ -667,12 +667,15 @@ public class VerticalItemAnimator extends SimpleItemAnimator {
 
     private static class VpaListenerAdapter implements ViewPropertyAnimatorListener {
         @Override
-        public void onAnimationStart(View view) {}
+        public void onAnimationStart(View view) {
+        }
 
         @Override
-        public void onAnimationEnd(View view) {}
+        public void onAnimationEnd(View view) {
+        }
 
         @Override
-        public void onAnimationCancel(View view) {}
+        public void onAnimationCancel(View view) {
+        }
     }
 }

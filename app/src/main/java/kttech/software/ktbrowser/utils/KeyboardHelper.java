@@ -7,9 +7,11 @@ import android.view.ViewTreeObserver;
 
 class KeyboardHelper {
 
-    @NonNull private final View mView;
+    @NonNull
+    private final View mView;
     private int mLastRight = -1;
     private int mLastBottom = -1;
+
     /**
      * Constructor
      *

@@ -90,6 +90,7 @@ public class HtmlFetcher {
             add("twurl.nl");
         }
     };
+
     public HtmlFetcher() {
     }
 

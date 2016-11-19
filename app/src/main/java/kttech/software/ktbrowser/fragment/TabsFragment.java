@@ -74,7 +74,8 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
     private int mIconColor;
     private boolean mColorMode = true;
     private boolean mShowInNavigationDrawer;
-    @Nullable private LightningViewAdapter mTabsAdapter;
+    @Nullable
+    private LightningViewAdapter mTabsAdapter;
     private UIController mUiController;
     private RecyclerView mRecyclerView;
     private TabsManager mTabsManager;
@@ -96,8 +97,8 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
         mColorMode = mPreferences.getColorModeEnabled();
         mColorMode &= !mDarkTheme;
         mIconColor = mDarkTheme ?
-            ThemeUtils.getIconDarkThemeColor(context) :
-            ThemeUtils.getIconLightThemeColor(context);
+                ThemeUtils.getIconDarkThemeColor(context) :
+                ThemeUtils.getIconLightThemeColor(context);
     }
 
     @Nullable
@@ -205,8 +206,8 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
         mColorMode = mPreferences.getColorModeEnabled();
         mColorMode &= !mDarkTheme;
         mIconColor = mDarkTheme ?
-            ThemeUtils.getIconDarkThemeColor(activity) :
-            ThemeUtils.getIconLightThemeColor(activity);
+                ThemeUtils.getIconDarkThemeColor(activity) :
+                ThemeUtils.getIconLightThemeColor(activity);
         if (mTabsAdapter != null) {
             mTabsAdapter.notifyDataSetChanged();
         }
@@ -277,8 +278,10 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
 
         private static final float DESATURATED = 0.5f;
         private final int mLayoutResourceId;
-        @Nullable private final Drawable mBackgroundTabDrawable;
-        @Nullable private final Bitmap mForegroundTabBitmap;
+        @Nullable
+        private final Drawable mBackgroundTabDrawable;
+        @Nullable
+        private final Bitmap mForegroundTabBitmap;
         private final boolean mDrawerTabs;
         private ColorMatrix mColorMatrix;
         private Paint mPaint;
@@ -370,7 +373,7 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
 
         public Bitmap getDesaturatedBitmap(@NonNull Bitmap favicon) {
             Bitmap grayscaleBitmap = Bitmap.createBitmap(favicon.getWidth(),
-                favicon.getHeight(), Bitmap.Config.ARGB_8888);
+                    favicon.getHeight(), Bitmap.Config.ARGB_8888);
 
             Canvas c = new Canvas(grayscaleBitmap);
             if (mColorMatrix == null || mFilter == null || mPaint == null) {
@@ -397,6 +400,7 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
             final FrameLayout exitButton;
             @NonNull
             final LinearLayout layout;
+
             public LightningViewHolder(@NonNull View view) {
                 super(view);
                 txtTitle = (TextView) view.findViewById(R.id.textTab);

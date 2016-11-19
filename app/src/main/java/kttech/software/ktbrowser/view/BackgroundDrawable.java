@@ -19,7 +19,7 @@ public class BackgroundDrawable extends TransitionDrawable {
      */
     public BackgroundDrawable(Context context) {
         super(new Drawable[]{new ColorDrawable(ContextCompat.getColor(context, R.color.transparent)),
-            new ColorDrawable(ThemeUtils.getColor(context, R.attr.selectedBackground))});
+                new ColorDrawable(ThemeUtils.getColor(context, R.attr.selectedBackground))});
     }
 
 

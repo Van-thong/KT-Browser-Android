@@ -51,18 +51,24 @@ public class SuggestionsAdapter extends BaseAdapter implements Filterable {
     private final List<HistoryItem> mHistory = new ArrayList<>(5);
     private final List<HistoryItem> mBookmarks = new ArrayList<>(5);
     private final List<HistoryItem> mSuggestions = new ArrayList<>(5);
-    @NonNull private final Drawable mSearchDrawable;
-    @NonNull private final Drawable mHistoryDrawable;
-    @NonNull private final Drawable mBookmarkDrawable;
+    @NonNull
+    private final Drawable mSearchDrawable;
+    @NonNull
+    private final Drawable mHistoryDrawable;
+    @NonNull
+    private final Drawable mBookmarkDrawable;
 
     private final Comparator<HistoryItem> mFilterComparator = new SuggestionsComparator();
     private final List<HistoryItem> mAllBookmarks = new ArrayList<>(5);
     private final boolean mDarkTheme;
     @NonNull
     private final Context mContext;
-    @Inject HistoryDatabase mDatabaseHandler;
-    @Inject BookmarkManager mBookmarkManager;
-    @Inject PreferenceManager mPreferenceManager;
+    @Inject
+    HistoryDatabase mDatabaseHandler;
+    @Inject
+    BookmarkManager mBookmarkManager;
+    @Inject
+    PreferenceManager mPreferenceManager;
     private boolean mIsIncognito = true;
     private PreferenceManager.Suggestion mSuggestionChoice;
 
@@ -100,7 +106,7 @@ public class SuggestionsAdapter extends BaseAdapter implements Filterable {
                 subscriber.onComplete();
             }
         }).subscribeOn(Schedulers.io())
-            .subscribe();
+                .subscribe();
     }
 
     @Override
@@ -188,8 +194,8 @@ public class SuggestionsAdapter extends BaseAdapter implements Filterable {
                 subscriber.onComplete();
             }
         }).subscribeOn(FILTER_SCHEDULER)
-            .observeOn(Schedulers.main())
-            .subscribe();
+                .observeOn(Schedulers.main())
+                .subscribe();
     }
 
     private void combineResults(final @Nullable List<HistoryItem> bookmarkList,
@@ -234,13 +240,13 @@ public class SuggestionsAdapter extends BaseAdapter implements Filterable {
                 subscriber.onComplete();
             }
         }).subscribeOn(FILTER_SCHEDULER)
-            .observeOn(Schedulers.main())
-            .subscribe(new OnSubscribe<List<HistoryItem>>() {
-                @Override
-                public void onNext(@Nullable List<HistoryItem> item) {
-                    publishResults(item);
-                }
-            });
+                .observeOn(Schedulers.main())
+                .subscribe(new OnSubscribe<List<HistoryItem>>() {
+                    @Override
+                    public void onNext(@Nullable List<HistoryItem> item) {
+                        publishResults(item);
+                    }
+                });
 
     }
 
@@ -256,7 +262,7 @@ public class SuggestionsAdapter extends BaseAdapter implements Filterable {
                         break;
                     }
                     if (mAllBookmarks.get(n).getTitle().toLowerCase(Locale.getDefault())
-                        .startsWith(query)) {
+                            .startsWith(query)) {
                         bookmarks.add(mAllBookmarks.get(n));
                         counter++;
                     } else if (mAllBookmarks.get(n).getUrl().contains(query)) {
@@ -319,7 +325,8 @@ public class SuggestionsAdapter extends BaseAdapter implements Filterable {
 
     private static class SearchFilter extends Filter {
 
-        @NonNull private final SuggestionsAdapter mSuggestionsAdapter;
+        @NonNull
+        private final SuggestionsAdapter mSuggestionsAdapter;
 
         SearchFilter(@NonNull SuggestionsAdapter suggestionsAdapter) {
             mSuggestionsAdapter = suggestionsAdapter;
@@ -336,35 +343,35 @@ public class SuggestionsAdapter extends BaseAdapter implements Filterable {
 
             if (mSuggestionsAdapter.shouldRequestNetwork() && !SuggestionsManager.isRequestInProgress()) {
                 mSuggestionsAdapter.getSuggestionsForQuery(query)
-                    .subscribeOn(Schedulers.worker())
+                        .subscribeOn(Schedulers.worker())
+                        .observeOn(Schedulers.main())
+                        .subscribe(new OnSubscribe<List<HistoryItem>>() {
+                            @Override
+                            public void onNext(@Nullable List<HistoryItem> item) {
+                                mSuggestionsAdapter.combineResults(null, null, item);
+                            }
+                        });
+            }
+
+            mSuggestionsAdapter.getBookmarksForQuery(query)
+                    .subscribeOn(Schedulers.io())
                     .observeOn(Schedulers.main())
                     .subscribe(new OnSubscribe<List<HistoryItem>>() {
                         @Override
                         public void onNext(@Nullable List<HistoryItem> item) {
-                            mSuggestionsAdapter.combineResults(null, null, item);
+                            mSuggestionsAdapter.combineResults(item, null, null);
                         }
                     });
-            }
-
-            mSuggestionsAdapter.getBookmarksForQuery(query)
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.main())
-                .subscribe(new OnSubscribe<List<HistoryItem>>() {
-                    @Override
-                    public void onNext(@Nullable List<HistoryItem> item) {
-                        mSuggestionsAdapter.combineResults(item, null, null);
-                    }
-                });
 
             mSuggestionsAdapter.getHistoryForQuery(query)
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.main())
-                .subscribe(new OnSubscribe<List<HistoryItem>>() {
-                    @Override
-                    public void onNext(@Nullable List<HistoryItem> item) {
-                        mSuggestionsAdapter.combineResults(null, item, null);
-                    }
-                });
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.main())
+                    .subscribe(new OnSubscribe<List<HistoryItem>>() {
+                        @Override
+                        public void onNext(@Nullable List<HistoryItem> item) {
+                            mSuggestionsAdapter.combineResults(null, item, null);
+                        }
+                    });
             results.count = 1;
             return results;
         }

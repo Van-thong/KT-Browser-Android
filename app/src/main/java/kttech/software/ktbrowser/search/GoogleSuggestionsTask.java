@@ -18,8 +18,10 @@ import kttech.software.ktbrowser.database.HistoryItem;
 class GoogleSuggestionsTask extends BaseSuggestionsTask {
 
     private static final String ENCODING = "ISO-8859-1";
-    @Nullable private static XmlPullParser sXpp;
-    @NonNull private final String mSearchSubtitle;
+    @Nullable
+    private static XmlPullParser sXpp;
+    @NonNull
+    private final String mSearchSubtitle;
 
     GoogleSuggestionsTask(@NonNull String query,
                           @NonNull Application application,
@@ -41,7 +43,7 @@ class GoogleSuggestionsTask extends BaseSuggestionsTask {
     @NonNull
     protected String getQueryUrl(@NonNull String query, @NonNull String language) {
         return "https://suggestqueries.google.com/complete/search?output=toolbar&hl="
-            + language + "&q=" + query;
+                + language + "&q=" + query;
     }
 
     @Override
@@ -55,7 +57,7 @@ class GoogleSuggestionsTask extends BaseSuggestionsTask {
             if (eventType == XmlPullParser.START_TAG && "suggestion".equals(parser.getName())) {
                 String suggestion = parser.getAttributeValue(null, "data");
                 results.add(new HistoryItem(mSearchSubtitle + " \"" + suggestion + '"',
-                    suggestion, R.drawable.ic_search));
+                        suggestion, R.drawable.ic_search));
                 counter++;
                 if (counter >= MAX_RESULTS) {
                     break;

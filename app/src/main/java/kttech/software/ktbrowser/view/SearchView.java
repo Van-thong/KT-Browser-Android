@@ -9,9 +9,11 @@ import android.widget.AutoCompleteTextView;
 
 public class SearchView extends AutoCompleteTextView {
 
-    @Nullable private PreFocusListener mListener;
+    @Nullable
+    private PreFocusListener mListener;
     private boolean mIsBeingClicked;
     private long mTimePressed;
+
     public SearchView(Context context) {
         super(context);
     }

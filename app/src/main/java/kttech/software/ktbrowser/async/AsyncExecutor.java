@@ -20,7 +20,8 @@ public class AsyncExecutor implements Executor {
     private final Queue<Runnable> mQueue = new ArrayDeque<>(1);
     private final ExecutorService mExecutor = Executors.newFixedThreadPool(4);
 
-    private AsyncExecutor() {}
+    private AsyncExecutor() {
+    }
 
     @NonNull
     public static AsyncExecutor getInstance() {

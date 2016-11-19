@@ -61,7 +61,7 @@ public class BrowserDialog {
         ListView listView = (ListView) layout.findViewById(R.id.dialog_list);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(activity,
-            android.R.layout.simple_list_item_1);
+                android.R.layout.simple_list_item_1);
 
         final List<Item> itemList = new ArrayList<>(1);
         if (item.isConditionMet()) {
@@ -125,13 +125,13 @@ public class BrowserDialog {
         layout.addView(editText);
         editorDialog.setView(layout);
         editorDialog.setPositiveButton(action,
-            new DialogInterface.OnClickListener() {
+                new DialogInterface.OnClickListener() {
 
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    listener.onClick(editText.getText().toString());
-                }
-            });
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        listener.onClick(editText.getText().toString());
+                    }
+                });
 
         Dialog dialog = editorDialog.show();
         setDialogSize(activity, dialog);

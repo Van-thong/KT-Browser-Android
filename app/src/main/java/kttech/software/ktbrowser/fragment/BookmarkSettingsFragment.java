@@ -312,7 +312,7 @@ public class BookmarkSettingsFragment extends PreferenceFragment implements Pref
     }
 
     private void createDialog() {
-        if(mActivity == null){
+        if (mActivity == null) {
             return;
         }
         final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);

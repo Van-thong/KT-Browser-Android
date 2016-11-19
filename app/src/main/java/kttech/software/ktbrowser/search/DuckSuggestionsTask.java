@@ -16,7 +16,8 @@ import kttech.software.ktbrowser.utils.FileUtils;
 final class DuckSuggestionsTask extends BaseSuggestionsTask {
 
     private static final String ENCODING = "UTF-8";
-    @NonNull private final String mSearchSubtitle;
+    @NonNull
+    private final String mSearchSubtitle;
 
     DuckSuggestionsTask(@NonNull String query,
                         @NonNull Application application,
@@ -39,7 +40,7 @@ final class DuckSuggestionsTask extends BaseSuggestionsTask {
             JSONObject object = jsonArray.getJSONObject(n);
             String suggestion = object.getString("phrase");
             results.add(new HistoryItem(mSearchSubtitle + " \"" + suggestion + '"',
-                suggestion, R.drawable.ic_search));
+                    suggestion, R.drawable.ic_search));
             counter++;
             if (counter >= MAX_RESULTS) {
                 break;

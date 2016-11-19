@@ -668,12 +668,15 @@ public class HorizontalItemAnimator extends SimpleItemAnimator {
 
     private static class VpaListenerAdapter implements ViewPropertyAnimatorListener {
         @Override
-        public void onAnimationStart(View view) {}
+        public void onAnimationStart(View view) {
+        }
 
         @Override
-        public void onAnimationEnd(View view) {}
+        public void onAnimationEnd(View view) {
+        }
 
         @Override
-        public void onAnimationCancel(View view) {}
+        public void onAnimationCancel(View view) {
+        }
     }
 }
