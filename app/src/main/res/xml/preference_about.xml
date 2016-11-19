@@ -14,6 +14,17 @@
             </intent>
         </Preference>
         <Preference
+            android:summary="kt-browser.com"
+            android:title="Trang chủ">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="http://kt-browser.com">
+                <extra
+                    android:name="SOURCE"
+                    android:value="SELF" />
+            </intent>
+        </Preference>
+        <Preference
             android:key="pref_version"
             android:title="@string/version" />
     </PreferenceCategory>
