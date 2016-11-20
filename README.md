@@ -2,10 +2,11 @@
 ####Tốc độ, ưu việt
 #![](ic_launcher_small.png)
 ####Tải về
-Hiện tại chưa có build chính thức
+
+* [Tải từ Google Play](https://play.google.com/store/apps/details?id=kttech.software.ktbrowser)
 
 ####Features
-* Bookmarks
+* Dấu trang
 
 * Lược sử
 
