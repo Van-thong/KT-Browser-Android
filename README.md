@@ -1,11 +1,15 @@
-#KT Browser
-####Tốc độ, ưu việt
+# KT Browser
+
+#### Một trình duyệt web chống quảng cáo, an toàn dành cho hệ điều hành Android của nhóm KTTECH.
+
 #![](ic_launcher_small.png)
-####Tải về
+
+#### Tải về
 
 * [Tải từ Google Play](https://play.google.com/store/apps/details?id=kttech.software.ktbrowser)
 
-####Features
+#### Các tính năng
+
 * Dấu trang
 
 * Lược sử
@@ -22,7 +26,7 @@
 
 * Hỗ trợ Orbot Proxy và I2P Proxy
 
-####Cần các quyền
+#### Cần các quyền
 
 * ````INTERNET````: Để truy cập mạng
 
@@ -34,11 +38,12 @@
 
 * ````ACCESS_NETWORK_STATE````: Required for the WebView to function by some OEM versions of WebKit
 
-####Code
-* Đóng góp vào project này thoải mái.
-* Mọi người có thể fix bug hoặc report trong issues
+#### Code
+* Tạo một pull-request nếu bạn có thể đóng góp vào mã nguồn.
+* Bạn có thể báo cáo lỗi trong issues.
 
-####Đóng góp
+#### Đóng góp
+
 * Luôn chào đón cộng đồng đóng góp
 * Nếu bạn có thể code và có ý tưởng cho tính năng đó, hãy tạo một pull-request
 * Kiểu code*
@@ -47,7 +52,8 @@
          * Prefix static member variables with 's'
     * Use 4 spaces instead of a tab (\t)
 
-####Bản quyền
+#### Bản quyền
+
 ````
 Copyright 2016 Nguyễn Anh Khoa
 
@@ -59,6 +65,7 @@ KT Browser (Android Version)
    
    http://mozilla.org/MPL/2.0/
 ````
+
 ````
 Copyright 2014 Anthony Restaino
 
