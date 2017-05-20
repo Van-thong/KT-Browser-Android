@@ -2,7 +2,7 @@
 
 #### Một trình duyệt web chống quảng cáo, an toàn dành cho hệ điều hành Android của nhóm KTTECH.
 
-#![](ic_launcher_small.png)
+![](ic_launcher_small.png)
 
 #### Tải về
 
@@ -38,15 +38,11 @@
 
 * ````ACCESS_NETWORK_STATE````: Required for the WebView to function by some OEM versions of WebKit
 
-#### Code
-* Tạo một pull-request nếu bạn có thể đóng góp vào mã nguồn.
-* Bạn có thể báo cáo lỗi trong issues.
-
 #### Đóng góp
 
-* Luôn chào đón cộng đồng đóng góp
-* Nếu bạn có thể code và có ý tưởng cho tính năng đó, hãy tạo một pull-request
-* Kiểu code*
+* Bạn có thể báo cáo lỗi trong mục issues.
+* Nếu bạn có thể code và có ý tưởng cho tính năng đó, hãy tạo một pull-request.
+* Kiểu code:
     * Hungarian Notation
          * Prefix member variables with 'm'
          * Prefix static member variables with 's'
