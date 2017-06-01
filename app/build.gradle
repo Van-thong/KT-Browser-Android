@@ -1,46 +1,42 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.neenbedankt.android-apt'
 apply plugin: 'com.getkeepsafe.dexcount'
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion "24.0.3"
-
+    signingConfigs {
+    }
+    compileSdkVersion 25
+    buildToolsVersion '25.0.2'
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 24
-        versionName "6.0.0.0"
+        targetSdkVersion 25
+        versionName "6.5"
         vectorDrawables.useSupportLibrary = true
     }
-
     sourceSets {
-        lightningPlus.setRoot('src/LightningPlus')
-        lightningLite.setRoot('src/LightningLite')
+        ktbrowser.setRoot('src/ktbrowser')
     }
-
     buildTypes {
         debug {
             minifyEnabled false
             shrinkResources false
             proguardFiles 'proguard-project.txt'
         }
-
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles 'proguard-project.txt'
         }
     }
-
     productFlavors {
         ktbrowser {
+            buildConfigField "boolean", "FULL_VERSION", "Boolean.parseBoolean(\"true\")"
+            applicationId "kttech.software.ktbrowser"
+            versionCode 91
         }
     }
-
     lintOptions {
         abortOnError true
     }
-
     packagingOptions {
         exclude '.readme'
     }
@@ -49,39 +45,42 @@ android {
 dexcount {
     includeClasses = false
     includeFieldCount = false
-    printAsTree = true
+    format = "tree"
     orderByMethodCount = true
     verbose = false
 }
 
 dependencies {
     // support libraries
-    compile 'com.android.support:palette-v7:24.2.1'
-    compile 'com.android.support:appcompat-v7:24.2.1'
-    compile 'com.android.support:design:24.2.1'
-    compile 'com.android.support:recyclerview-v7:24.2.1'
-    compile 'com.android.support:support-v4:24.2.1'
+    def supportLibVersion = '25.3.1'
+    compile "com.android.support:palette-v7:$supportLibVersion"
+    compile "com.android.support:appcompat-v7:$supportLibVersion"
+    compile "com.android.support:design:$supportLibVersion"
+    compile "com.android.support:recyclerview-v7:$supportLibVersion"
+    compile "com.android.support:support-v4:$supportLibVersion"
     // html parsing for reading mode
-    compile 'org.jsoup:jsoup:1.9.2'
-    // event bus
-    compile 'com.squareup:otto:1.3.8'
+    compile 'org.jsoup:jsoup:1.10.2'
     // dependency injection
-    compile 'com.google.dagger:dagger:2.0.2'
-    apt 'com.google.dagger:dagger-compiler:2.0.2'
+    def daggerVersion = '2.10'
+    compile "com.google.dagger:dagger:$daggerVersion"
+    annotationProcessor "com.google.dagger:dagger-compiler:$daggerVersion"
     provided 'javax.annotation:jsr250-api:1.0'
     // view binding
-    compile 'com.jakewharton:butterknife:7.0.1'
+    compile 'com.jakewharton:butterknife:8.5.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.5.1'
     // permissions
     compile 'com.anthonycr.grant:permissions:1.1.2'
     // proxy support
     compile 'net.i2p.android:client:0.8'
-    // Use the following code to update the libnetcipher submodule
-    // git submodule foreach git reset --hard
-    // git submodule update --remote
-    compile project(':libnetcipher')
-    compile project(':bonsai')
-    compile project(':animated-progress-bar')
+    compile 'com.squareup.okhttp3:okhttp:3.7.0'
+    // tor proxy
+    def netcipherVersion = '2.0.0-alpha1'
+    compile "info.guardianproject.netcipher:netcipher:$netcipherVersion"
+    compile "info.guardianproject.netcipher:netcipher-webkit:$netcipherVersion"
+    compile 'com.anthonycr.bonsai:bonsai:1.1.0'
+    compile 'com.anthonycr.progress:animated-progress:1.0'
     // memory leak analysis
-    debugCompile 'com.squareup.leakcanary:leakcanary-android:1.4'
-    releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4'
+    def leakCanaryVersion = '1.5.1'
+    debugCompile "com.squareup.leakcanary:leakcanary-android:$leakCanaryVersion"
+    releaseCompile "com.squareup.leakcanary:leakcanary-android-no-op:$leakCanaryVersion"
 }

@@ -16,6 +16,7 @@ import android.webkit.WebChromeClient.CustomViewCallback;
 
 import kttech.software.ktbrowser.activity.TabsManager;
 import kttech.software.ktbrowser.database.HistoryItem;
+import kttech.software.ktbrowser.dialog.LightningDialogBuilder;
 import kttech.software.ktbrowser.view.LightningView;
 
 public interface UIController {
@@ -82,5 +83,13 @@ public interface UIController {
     void onForwardButtonPressed();
 
     void onHomeButtonPressed();
+
+    void handleBookmarksChange();
+
+    void handleBookmarkDeleted(@NonNull HistoryItem item);
+
+    void handleNewTab(@NonNull LightningDialogBuilder.NewTab newTabType, @NonNull String url);
+
+    void handleHistoryChange();
 
 }

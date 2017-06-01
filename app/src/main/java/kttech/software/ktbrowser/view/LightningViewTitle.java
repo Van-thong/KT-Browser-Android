@@ -16,20 +16,30 @@ import kttech.software.ktbrowser.utils.Utils;
  */
 class LightningViewTitle {
 
-    @Nullable
-    private static Bitmap DEFAULT_DARK_ICON;
-    @Nullable
-    private static Bitmap DEFAULT_LIGHT_ICON;
-    @NonNull
-    private final Context mContext;
-    @Nullable
-    private Bitmap mFavicon = null;
-    @NonNull
-    private String mTitle;
+    @Nullable private static Bitmap DEFAULT_DARK_ICON;
+    @Nullable private static Bitmap DEFAULT_LIGHT_ICON;
+
+    @Nullable private Bitmap mFavicon = null;
+    @NonNull private String mTitle;
+    @NonNull private final Context mContext;
 
     public LightningViewTitle(@NonNull Context context) {
         mContext = context;
         mTitle = context.getString(R.string.action_new_tab);
+    }
+
+    /**
+     * Set the current favicon to a new Bitmap.
+     * May be null, if null, the default will be used.
+     *
+     * @param favicon the potentially null favicon to set.
+     */
+    public void setFavicon(@Nullable Bitmap favicon) {
+        if (favicon == null) {
+            mFavicon = null;
+        } else {
+            mFavicon = Utils.padFavicon(favicon);
+        }
     }
 
     /**
@@ -55,16 +65,16 @@ class LightningViewTitle {
     }
 
     /**
-     * Set the current favicon to a new Bitmap.
-     * May be null, if null, the default will be used.
+     * Set the current title to a new title.
+     * Must not be null.
      *
-     * @param favicon the potentially null favicon to set.
+     * @param title the non-null title to set.
      */
-    public void setFavicon(@Nullable Bitmap favicon) {
-        if (favicon == null) {
-            mFavicon = null;
+    public void setTitle(@Nullable String title) {
+        if (title == null) {
+            mTitle = "";
         } else {
-            mFavicon = Utils.padFavicon(favicon);
+            mTitle = title;
         }
     }
 
@@ -77,20 +87,6 @@ class LightningViewTitle {
     @NonNull
     public String getTitle() {
         return mTitle;
-    }
-
-    /**
-     * Set the current title to a new title.
-     * Must not be null.
-     *
-     * @param title the non-null title to set.
-     */
-    public void setTitle(@Nullable String title) {
-        if (title == null) {
-            mTitle = "";
-        } else {
-            mTitle = title;
-        }
     }
 
     /**

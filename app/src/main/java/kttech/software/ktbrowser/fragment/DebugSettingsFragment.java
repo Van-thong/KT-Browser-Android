@@ -18,8 +18,7 @@ public class DebugSettingsFragment extends PreferenceFragment implements Prefere
 
     private static final String LEAK_CANARY = "leak_canary_enabled";
 
-    @Inject
-    PreferenceManager mPreferenceManager;
+    @Inject PreferenceManager mPreferenceManager;
 
     private SwitchPreference mSwitchLeakCanary;
 

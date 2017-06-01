@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.Preference;
+import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -21,8 +22,8 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 
-import com.anthonycr.bonsai.OnSubscribe;
-import com.anthonycr.bonsai.Schedulers;
+import com.anthonycr.bonsai.CompletableOnSubscribe;
+import com.anthonycr.bonsai.SingleOnSubscribe;
 import com.anthonycr.grant.PermissionsManager;
 import com.anthonycr.grant.PermissionsResultAction;
 
@@ -37,48 +38,91 @@ import javax.inject.Inject;
 
 import kttech.software.ktbrowser.R;
 import kttech.software.ktbrowser.app.BrowserApp;
-import kttech.software.ktbrowser.constant.Constants;
-import kttech.software.ktbrowser.database.BookmarkLocalSync;
-import kttech.software.ktbrowser.database.BookmarkLocalSync.Source;
-import kttech.software.ktbrowser.database.BookmarkManager;
+import kttech.software.ktbrowser.database.bookmark.BookmarkExporter;
+import kttech.software.ktbrowser.database.bookmark.BookmarkLocalSync;
+import kttech.software.ktbrowser.database.bookmark.BookmarkLocalSync.Source;
 import kttech.software.ktbrowser.database.HistoryItem;
+
+import com.anthonycr.bonsai.Schedulers;
+
+import kttech.software.ktbrowser.database.bookmark.BookmarkModel;
 import kttech.software.ktbrowser.dialog.BrowserDialog;
 import kttech.software.ktbrowser.utils.Preconditions;
 import kttech.software.ktbrowser.utils.Utils;
 
 public class BookmarkSettingsFragment extends PreferenceFragment implements Preference.OnPreferenceClickListener {
 
+    private static final String SETTINGS_BOOKMARK = "bookmark";
+    private static final String TAG = "BookmarkSettingsFrag";
+
     private static final String SETTINGS_EXPORT = "export_bookmark";
     private static final String SETTINGS_IMPORT = "import_bookmark";
     private static final String SETTINGS_IMPORT_BROWSER = "import_browser";
     private static final String SETTINGS_DELETE_BOOKMARKS = "delete_bookmarks";
-    private static final String[] REQUIRED_PERMISSIONS = new String[]{
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-    };
-    private static final File mPath = new File(Environment.getExternalStorageDirectory().toString());
-    @Inject
-    BookmarkManager mBookmarkManager;
-    @Nullable
-    private Activity mActivity;
+    private Preference importStock;
+
+    @Nullable private Activity mActivity;
+
+    @Inject BookmarkModel mBookmarkManager;
     private File[] mFileList;
     private String[] mFileNameList;
-    @Nullable
-    private BookmarkLocalSync mSync;
+    @Nullable private BookmarkLocalSync mSync;
 
-    @Nullable
-    private static String getTitle(@NonNull Activity activity, @NonNull String packageName) {
-        PackageManager pm = activity.getPackageManager();
-        try {
-            ApplicationInfo info = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
-            CharSequence title = pm.getApplicationLabel(info);
-            if (title != null) {
-                return title.toString();
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+    private static final String[] REQUIRED_PERMISSIONS = new String[]{
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+    private static final File mPath = new File(Environment.getExternalStorageDirectory().toString());
+
+    private class ImportBookmarksTask extends AsyncTask<Void, Void, Integer> {
+
+        @NonNull private final WeakReference<Activity> mActivityReference;
+        private final Source mSource;
+
+        public ImportBookmarksTask(Activity activity, Source source) {
+            mActivityReference = new WeakReference<>(activity);
+            mSource = source;
         }
-        return null;
+
+        @Override
+        protected Integer doInBackground(Void... params) {
+            List<HistoryItem> list;
+            Log.d(TAG, "Loading bookmarks from: " + mSource.name());
+            switch (mSource) {
+                case STOCK:
+                    list = getSync().getBookmarksFromStockBrowser();
+                    break;
+                case CHROME_STABLE:
+                    list = getSync().getBookmarksFromChrome();
+                    break;
+                case CHROME_BETA:
+                    list = getSync().getBookmarksFromChromeBeta();
+                    break;
+                case CHROME_DEV:
+                    list = getSync().getBookmarksFromChromeDev();
+                    break;
+                default:
+                    list = new ArrayList<>(0);
+                    break;
+            }
+            int count = 0;
+            if (!list.isEmpty()) {
+                mBookmarkManager.addBookmarkList(list);
+                count = list.size();
+            }
+            return count;
+        }
+
+        @Override
+        protected void onPostExecute(Integer num) {
+            super.onPostExecute(num);
+            Activity activity = mActivityReference.get();
+            if (activity != null) {
+                int number = num;
+                final String message = activity.getResources().getString(R.string.message_import);
+                Utils.showSnackbar(activity, number + " " + message);
+            }
+        }
     }
 
     @NonNull
@@ -125,20 +169,19 @@ public class BookmarkSettingsFragment extends PreferenceFragment implements Pref
         importPref.setOnPreferenceClickListener(this);
         deletePref.setOnPreferenceClickListener(this);
 
-        BrowserApp.getTaskThread().execute(new Runnable() {
-            @Override
-            public void run() {
-                final boolean isBrowserImportSupported = getSync().isBrowserImportSupported();
-                Schedulers.main().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        Preference importStock = findPreference(SETTINGS_IMPORT_BROWSER);
-                        importStock.setEnabled(isBrowserImportSupported);
-                        importStock.setOnPreferenceClickListener(BookmarkSettingsFragment.this);
-                    }
-                });
-            }
-        });
+        getSync().isBrowserImportSupported()
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.main())
+            .subscribe(new SingleOnSubscribe<Boolean>() {
+                @Override
+                public void onItem(@Nullable Boolean supported) {
+                    Preconditions.checkNonNull(supported);
+                    importStock = findPreference(SETTINGS_IMPORT_BROWSER);
+                    fixBookmark();
+                    importStock.setEnabled(supported);
+                    importStock.setOnPreferenceClickListener(BookmarkSettingsFragment.this);
+                }
+            });
 
     }
 
@@ -147,43 +190,64 @@ public class BookmarkSettingsFragment extends PreferenceFragment implements Pref
         switch (preference.getKey()) {
             case SETTINGS_EXPORT:
                 PermissionsManager.getInstance().requestPermissionsIfNecessaryForResult(getActivity(), REQUIRED_PERMISSIONS,
-                        new PermissionsResultAction() {
-                            @Override
-                            public void onGranted() {
-                                mBookmarkManager.exportBookmarks(getActivity());
-                            }
+                    new PermissionsResultAction() {
+                        @Override
+                        public void onGranted() {
+                            mBookmarkManager.getAllBookmarks()
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(new SingleOnSubscribe<List<HistoryItem>>() {
+                                    @Override
+                                    public void onItem(@Nullable List<HistoryItem> item) {
+                                        Preconditions.checkNonNull(item);
+                                        final File exportFile = BookmarkExporter.createNewExportFile();
+                                        BookmarkExporter.exportBookmarksToFile(item, exportFile)
+                                            .subscribeOn(Schedulers.io())
+                                            .observeOn(Schedulers.main())
+                                            .subscribe(new CompletableOnSubscribe() {
+                                                @Override
+                                                public void onComplete() {
+                                                    Activity activity = getActivity();
+                                                    if (activity != null) {
+                                                        Utils.showSnackbar(activity, activity.getString(R.string.bookmark_export_path)
+                                                            + ' ' + exportFile.getPath());
+                                                    }
+                                                }
+                                            });
+                                    }
+                                });
+                        }
 
-                            @Override
-                            public void onDenied(String permission) {
-                                //TODO Show message
-                            }
-                        });
+                        @Override
+                        public void onDenied(String permission) {
+                            //TODO Show message
+                        }
+                    });
                 return true;
             case SETTINGS_IMPORT:
                 PermissionsManager.getInstance().requestPermissionsIfNecessaryForResult(getActivity(), REQUIRED_PERMISSIONS,
-                        new PermissionsResultAction() {
-                            @Override
-                            public void onGranted() {
-                                loadFileList(null);
-                                createDialog();
-                            }
+                    new PermissionsResultAction() {
+                        @Override
+                        public void onGranted() {
+                            loadFileList(null);
+                            createDialog();
+                        }
 
-                            @Override
-                            public void onDenied(String permission) {
-                                //TODO Show message
-                            }
-                        });
+                        @Override
+                        public void onDenied(String permission) {
+                            //TODO Show message
+                        }
+                    });
                 return true;
             case SETTINGS_IMPORT_BROWSER:
                 getSync().getSupportedBrowsers().subscribeOn(Schedulers.worker())
-                        .observeOn(Schedulers.main()).subscribe(new OnSubscribe<List<Source>>() {
+                    .observeOn(Schedulers.main()).subscribe(new SingleOnSubscribe<List<Source>>() {
                     @Override
-                    public void onNext(@Nullable List<Source> items) {
+                    public void onItem(@Nullable List<Source> item) {
                         Activity activity = getActivity();
-                        if (items == null || activity == null) {
+                        if (item == null || activity == null) {
                             return;
                         }
-                        List<String> titles = buildTitleList(activity, items);
+                        List<String> titles = buildTitleList(activity, item);
                         showChooserDialog(activity, titles);
                     }
                 });
@@ -208,7 +272,7 @@ public class BookmarkSettingsFragment extends PreferenceFragment implements Pref
         builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                mBookmarkManager.deleteAllBookmarks();
+                mBookmarkManager.deleteAllBookmarks().subscribeOn(Schedulers.io()).subscribe();
             }
         });
         Dialog dialog = builder.show();
@@ -252,7 +316,7 @@ public class BookmarkSettingsFragment extends PreferenceFragment implements Pref
     private void showChooserDialog(final Activity activity, List<String> list) {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         final ArrayAdapter<String> adapter = new ArrayAdapter<>(activity,
-                android.R.layout.simple_list_item_1);
+            android.R.layout.simple_list_item_1);
         for (String title : list) {
             adapter.add(title);
         }
@@ -262,6 +326,7 @@ public class BookmarkSettingsFragment extends PreferenceFragment implements Pref
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String title = adapter.getItem(which);
+                Preconditions.checkNonNull(title);
                 Source source = null;
                 if (title.equals(getString(R.string.stock_browser))) {
                     source = Source.STOCK;
@@ -279,6 +344,21 @@ public class BookmarkSettingsFragment extends PreferenceFragment implements Pref
         });
         Dialog dialog = builder.show();
         BrowserDialog.setDialogSize(activity, dialog);
+    }
+
+    @Nullable
+    private static String getTitle(@NonNull Activity activity, @NonNull String packageName) {
+        PackageManager pm = activity.getPackageManager();
+        try {
+            ApplicationInfo info = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
+            CharSequence title = pm.getApplicationLabel(info);
+            if (title != null) {
+                return title.toString();
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private void loadFileList(@Nullable File path) {
@@ -311,6 +391,26 @@ public class BookmarkSettingsFragment extends PreferenceFragment implements Pref
         }
     }
 
+    private static class SortName implements Comparator<File> {
+
+        @Override
+        public int compare(@NonNull File a, @NonNull File b) {
+            if (a.isDirectory() && b.isDirectory())
+                return a.getName().compareTo(b.getName());
+
+            if (a.isDirectory())
+                return -1;
+
+            if (b.isDirectory())
+                return 1;
+
+            if (a.isFile() && b.isFile())
+                return a.getName().compareTo(b.getName());
+            else
+                return 1;
+        }
+    }
+
     private void createDialog() {
         if (mActivity == null) {
             return;
@@ -335,7 +435,32 @@ public class BookmarkSettingsFragment extends PreferenceFragment implements Pref
                     Dialog dialog1 = builder.show();
                     BrowserDialog.setDialogSize(mActivity, dialog1);
                 } else {
-                    mBookmarkManager.importBookmarksFromFile(mFileList[which], getActivity());
+                    BookmarkExporter.importBookmarksFromFile(mFileList[which])
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(new SingleOnSubscribe<List<HistoryItem>>() {
+                            @Override
+                            public void onItem(@Nullable final List<HistoryItem> importList) {
+                                Preconditions.checkNonNull(importList);
+                                mBookmarkManager.addBookmarkList(importList)
+                                    .observeOn(Schedulers.main())
+                                    .subscribe(new CompletableOnSubscribe() {
+                                        @Override
+                                        public void onComplete() {
+                                            Activity activity = getActivity();
+                                            if (activity != null) {
+                                                String message = activity.getResources().getString(R.string.message_import);
+                                                Utils.showSnackbar(activity, importList.size() + " " + message);
+                                            }
+                                        }
+                                    });
+                            }
+
+                            @Override
+                            public void onError(@NonNull Throwable throwable) {
+                                Log.e(TAG, "onError: importing bookmarks", throwable);
+                                Utils.createInformativeDialog(getActivity(), R.string.title_error, R.string.import_bookmark_error);
+                            }
+                        });
                 }
             }
 
@@ -343,76 +468,8 @@ public class BookmarkSettingsFragment extends PreferenceFragment implements Pref
         Dialog dialog = builder.show();
         BrowserDialog.setDialogSize(mActivity, dialog);
     }
-
-    private static class SortName implements Comparator<File> {
-
-        @Override
-        public int compare(@NonNull File a, @NonNull File b) {
-            if (a.isDirectory() && b.isDirectory())
-                return a.getName().compareTo(b.getName());
-
-            if (a.isDirectory())
-                return -1;
-
-            if (b.isDirectory())
-                return 1;
-
-            if (a.isFile() && b.isFile())
-                return a.getName().compareTo(b.getName());
-            else
-                return 1;
-        }
-    }
-
-    private class ImportBookmarksTask extends AsyncTask<Void, Void, Integer> {
-
-        @NonNull
-        private final WeakReference<Activity> mActivityReference;
-        private final Source mSource;
-
-        public ImportBookmarksTask(Activity activity, Source source) {
-            mActivityReference = new WeakReference<>(activity);
-            mSource = source;
-        }
-
-        @Override
-        protected Integer doInBackground(Void... params) {
-            List<HistoryItem> list;
-            Log.d(Constants.TAG, "Loading bookmarks from: " + mSource.name());
-            switch (mSource) {
-                case STOCK:
-                    list = getSync().getBookmarksFromStockBrowser();
-                    break;
-                case CHROME_STABLE:
-                    list = getSync().getBookmarksFromChrome();
-                    break;
-                case CHROME_BETA:
-                    list = getSync().getBookmarksFromChromeBeta();
-                    break;
-                case CHROME_DEV:
-                    list = getSync().getBookmarksFromChromeDev();
-                    break;
-                default:
-                    list = new ArrayList<>(0);
-                    break;
-            }
-            int count = 0;
-            if (!list.isEmpty()) {
-                mBookmarkManager.addBookmarkList(list);
-                count = list.size();
-            }
-            return count;
-        }
-
-        @Override
-        protected void onPostExecute(Integer num) {
-            super.onPostExecute(num);
-            Activity activity = mActivityReference.get();
-            if (activity != null) {
-                int number = num;
-                final String message = activity.getResources().getString(R.string.message_import);
-                Utils.showSnackbar(activity, number + " " + message);
-            }
-        }
+    public void fixBookmark(){
+        PreferenceCategory display_settings = (PreferenceCategory) findPreference(SETTINGS_BOOKMARK);
+        display_settings.removePreference(importStock);
     }
 }

@@ -25,19 +25,10 @@ public class HistoryItem implements Comparable<HistoryItem> {
     private Bitmap mBitmap = null;
 
     private int mImageId = 0;
-    private int mOrder = 0;
+    private int mPosition = 0;
     private boolean mIsFolder = false;
 
-    public HistoryItem() {
-    }
-
-    public HistoryItem(@NonNull HistoryItem item) {
-        this.mUrl = item.mUrl;
-        this.mTitle = item.mTitle;
-        this.mFolder = item.mFolder;
-        this.mOrder = item.mOrder;
-        this.mIsFolder = item.mIsFolder;
-    }
+    public HistoryItem() {}
 
     public HistoryItem(@NonNull String url, @NonNull String title) {
         Preconditions.checkNonNull(url);
@@ -64,12 +55,20 @@ public class HistoryItem implements Comparable<HistoryItem> {
         this.mImageId = id;
     }
 
-    public int getOrder() {
-        return mOrder;
+    public void setBitmap(@Nullable Bitmap image) {
+        mBitmap = image;
     }
 
-    public void setOrder(int order) {
-        mOrder = order;
+    public void setFolder(@Nullable String folder) {
+        mFolder = (folder == null) ? "" : folder;
+    }
+
+    public void setPosition(int order) {
+        mPosition = order;
+    }
+
+    public int getPosition() {
+        return mPosition;
     }
 
     @NonNull
@@ -80,10 +79,6 @@ public class HistoryItem implements Comparable<HistoryItem> {
     @Nullable
     public Bitmap getBitmap() {
         return mBitmap;
-    }
-
-    public void setBitmap(Bitmap image) {
-        mBitmap = image;
     }
 
     @NonNull
@@ -112,10 +107,6 @@ public class HistoryItem implements Comparable<HistoryItem> {
         return mIsFolder;
     }
 
-    public void setFolder(@Nullable String folder) {
-        mFolder = (folder == null) ? "" : folder;
-    }
-
     @NonNull
     @Override
     public String toString() {
@@ -141,8 +132,8 @@ public class HistoryItem implements Comparable<HistoryItem> {
         HistoryItem that = (HistoryItem) object;
 
         return mImageId == that.mImageId &&
-                this.mTitle.equals(that.mTitle) && this.mUrl.equals(that.mUrl) &&
-                this.mFolder.equals(that.mFolder);
+            this.mTitle.equals(that.mTitle) && this.mUrl.equals(that.mUrl) &&
+            this.mFolder.equals(that.mFolder);
     }
 
     @Override

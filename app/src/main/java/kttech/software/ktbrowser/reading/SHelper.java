@@ -204,12 +204,12 @@ class SHelper {
     public static boolean isVideoLink(String url) {
         url = extractDomain(url, true);
         return url.startsWith("youtube.com") || url.startsWith("video.yahoo.com")
-                || url.startsWith("vimeo.com") || url.startsWith("blip.tv");
+            || url.startsWith("vimeo.com") || url.startsWith("blip.tv");
     }
 
     public static boolean isVideo(String url) {
         return url.endsWith(".mpeg") || url.endsWith(".mpg") || url.endsWith(".avi") || url.endsWith(".mov")
-                || url.endsWith(".mpg4") || url.endsWith(".mp4") || url.endsWith(".flv") || url.endsWith(".wmv");
+            || url.endsWith(".mpg4") || url.endsWith(".mp4") || url.endsWith(".flv") || url.endsWith(".wmv");
     }
 
     public static boolean isAudio(String url) {
@@ -218,12 +218,12 @@ class SHelper {
 
     public static boolean isDoc(String url) {
         return url.endsWith(".pdf") || url.endsWith(".ppt") || url.endsWith(".doc")
-                || url.endsWith(".swf") || url.endsWith(".rtf") || url.endsWith(".xls");
+            || url.endsWith(".swf") || url.endsWith(".rtf") || url.endsWith(".xls");
     }
 
     public static boolean isPackage(String url) {
         return url.endsWith(".gz") || url.endsWith(".tgz") || url.endsWith(".zip")
-                || url.endsWith(".rar") || url.endsWith(".deb") || url.endsWith(".rpm") || url.endsWith(".7z");
+            || url.endsWith(".rar") || url.endsWith(".deb") || url.endsWith(".rpm") || url.endsWith(".7z");
     }
 
     public static boolean isApp(String url) {
@@ -232,7 +232,7 @@ class SHelper {
 
     public static boolean isImage(String url) {
         return url.endsWith(".png") || url.endsWith(".jpeg") || url.endsWith(".gif")
-                || url.endsWith(".jpg") || url.endsWith(".bmp") || url.endsWith(".ico") || url.endsWith(".eps");
+            || url.endsWith(".jpg") || url.endsWith(".bmp") || url.endsWith(".ico") || url.endsWith(".eps");
     }
 
     /**
@@ -415,16 +415,6 @@ class SHelper {
         }
     }
 
-    public static int countLetters(String str) {
-        int len = str.length();
-        int chars = 0;
-        for (int i = 0; i < len; i++) {
-            if (Character.isLetter(str.charAt(i)))
-                chars++;
-        }
-        return chars;
-    }
-
     private static class DefaultTrustManager implements X509TrustManager {
 
         @Override
@@ -447,5 +437,15 @@ class SHelper {
         public X509Certificate[] getAcceptedIssuers() {
             return null;
         }
+    }
+
+    public static int countLetters(String str) {
+        int len = str.length();
+        int chars = 0;
+        for (int i = 0; i < len; i++) {
+            if (Character.isLetter(str.charAt(i)))
+                chars++;
+        }
+        return chars;
     }
 }

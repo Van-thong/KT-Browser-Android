@@ -32,12 +32,11 @@ import android.webkit.WebSettings.LayoutAlgorithm;
 import android.webkit.WebSettings.PluginState;
 import android.webkit.WebView;
 
-import com.anthonycr.bonsai.Action;
-import com.anthonycr.bonsai.Observable;
-import com.anthonycr.bonsai.OnSubscribe;
 import com.anthonycr.bonsai.Schedulers;
-import com.anthonycr.bonsai.Subscriber;
-import com.squareup.otto.Bus;
+import com.anthonycr.bonsai.Single;
+import com.anthonycr.bonsai.SingleAction;
+import com.anthonycr.bonsai.SingleOnSubscribe;
+import com.anthonycr.bonsai.SingleSubscriber;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
@@ -51,75 +50,63 @@ import kttech.software.ktbrowser.constant.Constants;
 import kttech.software.ktbrowser.constant.HistoryPage;
 import kttech.software.ktbrowser.constant.StartPage;
 import kttech.software.ktbrowser.controller.UIController;
-import kttech.software.ktbrowser.database.BookmarkManager;
 import kttech.software.ktbrowser.dialog.LightningDialogBuilder;
 import kttech.software.ktbrowser.download.LightningDownloadListener;
 import kttech.software.ktbrowser.preference.PreferenceManager;
+import kttech.software.ktbrowser.utils.Preconditions;
 import kttech.software.ktbrowser.utils.ProxyUtils;
 import kttech.software.ktbrowser.utils.UrlUtils;
 import kttech.software.ktbrowser.utils.Utils;
 
 /**
- * {@link LightningView} acts as a tab for the software,
+ * {@link LightningView} acts as a tab for the browser,
  * handling WebView creation and handling logic, as well
  * as properly initialing it. All interactions with the
  * WebView should be made through this class.
  */
 public class LightningView {
 
+    private static final String TAG = "LightningView";
+
     public static final String HEADER_REQUESTED_WITH = "X-Requested-With";
     public static final String HEADER_WAP_PROFILE = "X-Wap-Profile";
-    private static final String TAG = LightningView.class.getSimpleName();
     private static final String HEADER_DNT = "DNT";
     private static final int API = android.os.Build.VERSION.SDK_INT;
     private static final int SCROLL_UP_THRESHOLD = Utils.dpToPx(10);
+
+    @Nullable private static String sHomepage;
+    @Nullable private static String sDefaultUserAgent;
+    private static float sMaxFling;
     private static final float[] sNegativeColorArray = {
-            -1.0f, 0, 0, 0, 255, // red
-            0, -1.0f, 0, 0, 255, // green
-            0, 0, -1.0f, 0, 255, // blue
-            0, 0, 0, 1.0f, 0 // alpha
+        -1.0f, 0, 0, 0, 255, // red
+        0, -1.0f, 0, 0, 255, // green
+        0, 0, -1.0f, 0, 255, // blue
+        0, 0, 0, 1.0f, 0 // alpha
     };
     private static final float[] sIncreaseContrastColorArray = {
-            2.0f, 0, 0, 0, -160.f, // red
-            0, 2.0f, 0, 0, -160.f, // green
-            0, 0, 2.0f, 0, -160.f, // blue
-            0, 0, 0, 1.0f, 0 // alpha
+        2.0f, 0, 0, 0, -160.f, // red
+        0, 2.0f, 0, 0, -160.f, // green
+        0, 0, 2.0f, 0, -160.f, // blue
+        0, 0, 0, 1.0f, 0 // alpha
     };
-    private static String sHomepage;
-    private static String sDefaultUserAgent;
-    private static float sMaxFling;
-    @NonNull
-    private final LightningViewTitle mTitle;
-    @NonNull
-    private final UIController mUIController;
-    @NonNull
-    private final GestureDetector mGestureDetector;
-    @NonNull
-    private final Activity mActivity;
-    @NonNull
-    private final Paint mPaint = new Paint();
+
+    @NonNull private final LightningViewTitle mTitle;
+    @Nullable private WebView mWebView;
+    @NonNull private final UIController mUIController;
+    @NonNull private final GestureDetector mGestureDetector;
+    @NonNull private final Activity mActivity;
+    @NonNull private final Paint mPaint = new Paint();
+    private boolean mIsNewTab;
     private final boolean mIsIncognitoTab;
-    @NonNull
-    private final WebViewHandler mWebViewHandler = new WebViewHandler(this);
-    @NonNull
-    private final Map<String, String> mRequestHeaders = new ArrayMap<>();
-    @Inject
-    Bus mEventBus;
-    @Inject
-    PreferenceManager mPreferences;
-    @Inject
-    LightningDialogBuilder mBookmarksDialogBuilder;
-    @Inject
-    ProxyUtils mProxyUtils;
-    @Inject
-    BookmarkManager mBookmarkManager;
-    @Nullable
-    private WebView mWebView;
-    @Nullable
-    private Object mTag;
-    private boolean isForegroundTab;
+    private boolean mIsForegroundTab;
     private boolean mInvertPage = false;
     private boolean mToggleDesktop = false;
+    @NonNull private final WebViewHandler mWebViewHandler = new WebViewHandler(this);
+    @NonNull private final Map<String, String> mRequestHeaders = new ArrayMap<>();
+
+    @Inject PreferenceManager mPreferences;
+    @Inject LightningDialogBuilder mBookmarksDialogBuilder;
+    @Inject ProxyUtils mProxyUtils;
 
     public LightningView(@NonNull Activity activity, @Nullable String url, boolean isIncognito) {
         BrowserApp.getAppComponent().inject(this);
@@ -171,29 +158,31 @@ public class LightningView {
     }
 
     /**
-     * The tag set on the object.
+     * Sets whether this tab was the
+     * result of a new intent sent
+     * to the browser.
      *
-     * @return the tag set on the object,
-     * may be null.
+     * @param isNewTab true if it's from
+     *                 a new intent,
+     *                 false otherwise.
      */
-    @Nullable
-    public Object getTag() {
-        return mTag;
+    public void setIsNewTab(boolean isNewTab) {
+        mIsNewTab = isNewTab;
     }
 
     /**
-     * Sets the tag on the object,
-     * a reference to this object is held
-     * indefinitely.
+     * Returns whether this tab was created
+     * as a result of a new intent.
      *
-     * @param tag the tag to set, may be null.
+     * @return true if it was a new intent,
+     * false otherwise.
      */
-    public void setTag(@Nullable Object tag) {
-        mTag = tag;
+    public boolean isNewTab() {
+        return mIsNewTab;
     }
 
     /**
-     * This method loads the homepage for the software. Either
+     * This method loads the homepage for the browser. Either
      * it loads the URL stored as the homepage, or loads the
      * startpage or bookmark page if either of those are set
      * as the homepage.
@@ -202,6 +191,8 @@ public class LightningView {
         if (mWebView == null) {
             return;
         }
+
+        Preconditions.checkNonNull(sHomepage);
         switch (sHomepage) {
             case Constants.SCHEME_HOMEPAGE:
                 loadStartpage();
@@ -221,7 +212,16 @@ public class LightningView {
      * UI thread.
      */
     private void loadStartpage() {
-        new StartPage(this, BrowserApp.get(mActivity)).load();
+        new StartPage().getHomepage()
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.main())
+            .subscribe(new SingleOnSubscribe<String>() {
+                @Override
+                public void onItem(@Nullable String item) {
+                    Preconditions.checkNonNull(item);
+                    loadUrl(item);
+                }
+            });
     }
 
     /**
@@ -230,9 +230,16 @@ public class LightningView {
      * UI thread. It also caches the default folder icon locally.
      */
     public void loadBookmarkpage() {
-        if (mWebView == null)
-            return;
-        new BookmarkPage(this, mActivity, mBookmarkManager).load();
+        new BookmarkPage(mActivity).getBookmarkPage()
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.main())
+            .subscribe(new SingleOnSubscribe<String>() {
+                @Override
+                public void onItem(@Nullable String item) {
+                    Preconditions.checkNonNull(item);
+                    loadUrl(item);
+                }
+            });
     }
 
     /**
@@ -361,7 +368,7 @@ public class LightningView {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             CookieManager.getInstance().setAcceptThirdPartyCookies(mWebView,
-                    !mPreferences.getBlockThirdPartyCookiesEnabled());
+                !mPreferences.getBlockThirdPartyCookiesEnabled());
         }
     }
 
@@ -413,62 +420,55 @@ public class LightningView {
             settings.setAllowUniversalAccessFromFileURLs(false);
         }
 
-        getPathObservable("appcache")
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.main())
-                .subscribe(new OnSubscribe<File>() {
-                    @Override
-                    public void onNext(File item) {
-                        settings.setAppCachePath(item.getPath());
-                    }
-
-                    @Override
-                    public void onComplete() {
-                    }
-                });
+        getPathObservable("appcache").subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.main())
+            .subscribe(new SingleOnSubscribe<File>() {
+                @Override
+                public void onItem(@Nullable File item) {
+                    Preconditions.checkNonNull(item);
+                    settings.setAppCachePath(item.getPath());
+                }
+            });
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-            getPathObservable("geolocation")
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.main())
-                    .subscribe(new OnSubscribe<File>() {
-                        @Override
-                        public void onNext(File item) {
-                            //noinspection deprecation
-                            settings.setGeolocationDatabasePath(item.getPath());
-                        }
-
-                        @Override
-                        public void onComplete() {
-                        }
-                    });
-        }
-
-        getPathObservable("databases")
-                .subscribeOn(Schedulers.io())
+            getPathObservable("geolocation").subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.main())
-                .subscribe(new OnSubscribe<File>() {
+                .subscribe(new SingleOnSubscribe<File>() {
                     @Override
-                    public void onNext(File item) {
-                        if (API < Build.VERSION_CODES.KITKAT) {
-                            //noinspection deprecation
-                            settings.setDatabasePath(item.getPath());
-                        }
-                    }
-
-                    @Override
-                    public void onComplete() {
+                    public void onItem(@Nullable File item) {
+                        Preconditions.checkNonNull(item);
+                        //noinspection deprecation
+                        settings.setGeolocationDatabasePath(item.getPath());
                     }
                 });
+        }
+
+        getPathObservable("databases").subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.main())
+            .subscribe(new SingleOnSubscribe<File>() {
+                @Override
+                public void onItem(@Nullable File item) {
+                    if (API < Build.VERSION_CODES.KITKAT) {
+                        Preconditions.checkNonNull(item);
+                        //noinspection deprecation
+                        settings.setDatabasePath(item.getPath());
+                    }
+                }
+
+                @Override
+                public void onComplete() {
+                }
+            });
 
     }
 
-    private Observable<File> getPathObservable(final String subFolder) {
-        return Observable.create(new Action<File>() {
+    @NonNull
+    private Single<File> getPathObservable(final String subFolder) {
+        return Single.create(new SingleAction<File>() {
             @Override
-            public void onSubscribe(@NonNull Subscriber<File> subscriber) {
-                File file = BrowserApp.get(mActivity).getDir(subFolder, 0);
-                subscriber.onNext(file);
+            public void onSubscribe(@NonNull SingleSubscriber<File> subscriber) {
+                File file = mActivity.getDir(subFolder, 0);
+                subscriber.onItem(file);
                 subscriber.onComplete();
             }
         });
@@ -556,7 +556,7 @@ public class LightningView {
 
     /**
      * This method gets the additional headers that should be
-     * added with each request the software makes.
+     * added with each request the browser makes.
      *
      * @return a non null Map of Strings with the additional
      * request headers.
@@ -609,25 +609,25 @@ public class LightningView {
     }
 
     /**
-     * Determines if the tab is in the foreground or not.
-     *
-     * @return true if the tab is the foreground tab,
-     * false otherwise.
-     */
-    public boolean isForegroundTab() {
-        return isForegroundTab;
-    }
-
-    /**
      * This method sets the tab as the foreground tab or
      * the background tab.
      *
      * @param isForeground true if the tab should be set as
      *                     foreground, false otherwise.
      */
-    public void setForegroundTab(boolean isForeground) {
-        isForegroundTab = isForeground;
+    public void setIsForegroundTab(boolean isForeground) {
+        mIsForegroundTab = isForeground;
         mUIController.tabChanged(this);
+    }
+
+    /**
+     * Determines if the tab is in the foreground or not.
+     *
+     * @return true if the tab is the foreground tab,
+     * false otherwise.
+     */
+    public boolean isForegroundTab() {
+        return mIsForegroundTab;
     }
 
     /**
@@ -714,7 +714,7 @@ public class LightningView {
                 break;
             case 1:
                 ColorMatrixColorFilter filterInvert = new ColorMatrixColorFilter(
-                        sNegativeColorArray);
+                    sNegativeColorArray);
                 mPaint.setColorFilter(filterInvert);
                 setHardwareRendering();
 
@@ -743,7 +743,7 @@ public class LightningView {
 
             case 4:
                 ColorMatrixColorFilter IncreaseHighContrast = new ColorMatrixColorFilter(
-                        sIncreaseContrastColorArray);
+                    sIncreaseContrastColorArray);
                 mPaint.setColorFilter(IncreaseHighContrast);
                 setHardwareRendering();
                 break;
@@ -972,36 +972,36 @@ public class LightningView {
         if (currentUrl != null && UrlUtils.isSpecialUrl(currentUrl)) {
             if (currentUrl.endsWith(HistoryPage.FILENAME)) {
                 if (url != null) {
-                    mBookmarksDialogBuilder.showLongPressedHistoryLinkDialog(mActivity, url);
+                    mBookmarksDialogBuilder.showLongPressedHistoryLinkDialog(mActivity, mUIController, url);
                 } else if (result != null && result.getExtra() != null) {
                     final String newUrl = result.getExtra();
-                    mBookmarksDialogBuilder.showLongPressedHistoryLinkDialog(mActivity, newUrl);
+                    mBookmarksDialogBuilder.showLongPressedHistoryLinkDialog(mActivity, mUIController, newUrl);
                 }
             } else if (currentUrl.endsWith(BookmarkPage.FILENAME)) {
                 if (url != null) {
-                    mBookmarksDialogBuilder.showLongPressedDialogForBookmarkUrl(mActivity, url);
+                    mBookmarksDialogBuilder.showLongPressedDialogForBookmarkUrl(mActivity, mUIController, url);
                 } else if (result != null && result.getExtra() != null) {
                     final String newUrl = result.getExtra();
-                    mBookmarksDialogBuilder.showLongPressedDialogForBookmarkUrl(mActivity, newUrl);
+                    mBookmarksDialogBuilder.showLongPressedDialogForBookmarkUrl(mActivity, mUIController, newUrl);
                 }
             }
         } else {
             if (url != null) {
                 if (result != null) {
                     if (result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE || result.getType() == WebView.HitTestResult.IMAGE_TYPE) {
-                        mBookmarksDialogBuilder.showLongPressImageDialog(mActivity, url, getUserAgent());
+                        mBookmarksDialogBuilder.showLongPressImageDialog(mActivity, mUIController, url, getUserAgent());
                     } else {
-                        mBookmarksDialogBuilder.showLongPressLinkDialog(mActivity, url);
+                        mBookmarksDialogBuilder.showLongPressLinkDialog(mActivity, mUIController, url);
                     }
                 } else {
-                    mBookmarksDialogBuilder.showLongPressLinkDialog(mActivity, url);
+                    mBookmarksDialogBuilder.showLongPressLinkDialog(mActivity, mUIController, url);
                 }
             } else if (result != null && result.getExtra() != null) {
                 final String newUrl = result.getExtra();
                 if (result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE || result.getType() == WebView.HitTestResult.IMAGE_TYPE) {
-                    mBookmarksDialogBuilder.showLongPressImageDialog(mActivity, newUrl, getUserAgent());
+                    mBookmarksDialogBuilder.showLongPressImageDialog(mActivity, mUIController, newUrl, getUserAgent());
                 } else {
-                    mBookmarksDialogBuilder.showLongPressLinkDialog(mActivity, newUrl);
+                    mBookmarksDialogBuilder.showLongPressLinkDialog(mActivity, mUIController, newUrl);
                 }
             }
         }
@@ -1100,32 +1100,6 @@ public class LightningView {
     }
 
     /**
-     * A Handler used to get the URL from a long click
-     * event on the WebView. It does not hold a hard
-     * reference to the WebView and therefore will not
-     * leak it if the WebView is garbage collected.
-     */
-    private static class WebViewHandler extends Handler {
-
-        @NonNull
-        private final WeakReference<LightningView> mReference;
-
-        public WebViewHandler(LightningView view) {
-            mReference = new WeakReference<>(view);
-        }
-
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-            final String url = msg.getData().getString("url");
-            LightningView view = mReference.get();
-            if (view != null) {
-                view.longClickPage(url);
-            }
-        }
-    }
-
-    /**
      * The OnTouchListener used by the WebView so we can
      * get scroll events and show/hide the action bar when
      * the page is scrolled up/down.
@@ -1171,15 +1145,6 @@ public class LightningView {
      */
     private class CustomGestureListener extends SimpleOnGestureListener {
 
-        /**
-         * Without this, onLongPress is not called when user is zooming using
-         * two fingers, but is when using only one.
-         * <p/>
-         * The required behaviour is to not trigger this when the user is
-         * zooming, it shouldn't matter how much fingers the user's using.
-         */
-        private boolean mCanTriggerLongPress = true;
-
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
             int power = (int) (velocityY * 100 / sMaxFling);
@@ -1190,6 +1155,15 @@ public class LightningView {
             }
             return super.onFling(e1, e2, velocityX, velocityY);
         }
+
+        /**
+         * Without this, onLongPress is not called when user is zooming using
+         * two fingers, but is when using only one.
+         * <p/>
+         * The required behaviour is to not trigger this when the user is
+         * zooming, it shouldn't matter how much fingers the user's using.
+         */
+        private boolean mCanTriggerLongPress = true;
 
         @Override
         public void onLongPress(MotionEvent e) {
@@ -1222,6 +1196,31 @@ public class LightningView {
         @Override
         public void onShowPress(MotionEvent e) {
             mCanTriggerLongPress = true;
+        }
+    }
+
+    /**
+     * A Handler used to get the URL from a long click
+     * event on the WebView. It does not hold a hard
+     * reference to the WebView and therefore will not
+     * leak it if the WebView is garbage collected.
+     */
+    private static class WebViewHandler extends Handler {
+
+        @NonNull private final WeakReference<LightningView> mReference;
+
+        WebViewHandler(@NonNull LightningView view) {
+            mReference = new WeakReference<>(view);
+        }
+
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+            final String url = msg.getData().getString("url");
+            LightningView view = mReference.get();
+            if (view != null) {
+                view.longClickPage(url);
+            }
         }
     }
 }

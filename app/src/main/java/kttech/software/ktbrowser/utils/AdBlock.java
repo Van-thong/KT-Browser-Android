@@ -1,10 +1,15 @@
 package kttech.software.ktbrowser.utils;
 
-import android.content.Context;
+import android.app.Application;
 import android.content.res.AssetManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+
+import com.anthonycr.bonsai.Completable;
+import com.anthonycr.bonsai.CompletableAction;
+import com.anthonycr.bonsai.CompletableSubscriber;
+import com.anthonycr.bonsai.Schedulers;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,7 +22,7 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import kttech.software.ktbrowser.app.BrowserApp;
+import kttech.software.ktbrowser.BuildConfig;
 import kttech.software.ktbrowser.preference.PreferenceManager;
 
 @Singleton
@@ -25,6 +30,7 @@ public class AdBlock {
 
     private static final String TAG = "AdBlock";
     private static final String BLOCKED_DOMAINS_LIST_FILE_NAME = "hosts.txt";
+    private static final String BLOCKED_DOMAINS_LIST_FILE_NAME2 = "hosts2.txt";
     private static final String LOCAL_IP_V4 = "127.0.0.1";
     private static final String LOCAL_IP_V4_ALT = "0.0.0.0";
     private static final String LOCAL_IP_V6 = "::1";
@@ -33,70 +39,24 @@ public class AdBlock {
     private static final String TAB = "\t";
     private static final String SPACE = " ";
     private static final String EMPTY = "";
-    private final Set<String> mBlockedDomainsList = new HashSet<>();
-    @Inject
-    PreferenceManager mPreferenceManager;
+
+    @NonNull private final Set<String> mBlockedDomainsList = new HashSet<>();
+    @NonNull private final PreferenceManager mPreferenceManager;
+    @NonNull private final Application mApplication;
     private boolean mBlockAds;
 
     @Inject
-    public AdBlock(@NonNull Context context) {
-        BrowserApp.getAppComponent().inject(this);
-        if (mBlockedDomainsList.isEmpty()) {
-            loadHostsFile(context);
+    AdBlock(@NonNull Application application, @NonNull PreferenceManager preferenceManager) {
+        mApplication = application;
+        mPreferenceManager = preferenceManager;
+        if (mBlockedDomainsList.isEmpty() && BuildConfig.FULL_VERSION) {
+            loadHostsFile().subscribeOn(Schedulers.io()).subscribe();
         }
         mBlockAds = mPreferenceManager.getAdBlockEnabled();
-    }
-
-    /**
-     * Returns the probable domain name for a given URL
-     *
-     * @param url the url to parse
-     * @return returns the domain
-     * @throws URISyntaxException throws an exception if the string cannot form a URI
-     */
-    @NonNull
-    private static String getDomainName(@NonNull String url) throws URISyntaxException {
-        int index = url.indexOf('/', 8);
-        if (index != -1) {
-            url = url.substring(0, index);
-        }
-
-        URI uri = new URI(url);
-        String domain = uri.getHost();
-        if (domain == null) {
-            return url;
-        }
-
-        return domain.startsWith("www.") ? domain.substring(4) : domain;
     }
 
     public void updatePreference() {
         mBlockAds = mPreferenceManager.getAdBlockEnabled();
-    }
-
-    private void loadBlockedDomainsList(@NonNull final Context context) {
-        BrowserApp.getTaskThread().execute(new Runnable() {
-
-            @Override
-            public void run() {
-                AssetManager asset = context.getAssets();
-                BufferedReader reader = null;
-                try {
-                    //noinspection IOResourceOpenedButNotSafelyClosed
-                    reader = new BufferedReader(new InputStreamReader(
-                            asset.open(BLOCKED_DOMAINS_LIST_FILE_NAME)));
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        mBlockedDomainsList.add(line.trim());
-                    }
-                } catch (IOException e) {
-                    Log.wtf(TAG, "Reading blocked domains list from file '"
-                            + BLOCKED_DOMAINS_LIST_FILE_NAME + "' failed.", e);
-                } finally {
-                    Utils.close(reader);
-                }
-            }
-        });
     }
 
     /**
@@ -127,55 +87,136 @@ public class AdBlock {
     }
 
     /**
-     * This method reads through a hosts file and extracts the domains that should
-     * be redirected to localhost (a.k.a. IP address 127.0.0.1). It can handle files that
-     * simply have a list of hostnames to block, or it can handle a full blown hosts file.
-     * It will strip out comments, references to the base IP address and just extract the
-     * domains to be used
+     * Returns the probable domain name for a given URL
      *
-     * @param context the context needed to read the file
+     * @param url the url to parse
+     * @return returns the domain
+     * @throws URISyntaxException throws an exception if the string cannot form a URI
      */
-    private void loadHostsFile(@NonNull final Context context) {
-        BrowserApp.getTaskThread().execute(new Runnable() {
+    @NonNull
+    private static String getDomainName(@NonNull String url) throws URISyntaxException {
+        int index = url.indexOf('/', 8);
+        if (index != -1) {
+            url = url.substring(0, index);
+        }
 
+        URI uri = new URI(url);
+        String domain = uri.getHost();
+        if (domain == null) {
+            return url;
+        }
+
+        return domain.startsWith("www.") ? domain.substring(4) : domain;
+    }
+
+    /**
+     * This Completable reads through a hosts file and extracts the domains that should
+     * be redirected to localhost (a.k.a. IP address 127.0.0.1). It can handle files that
+     * simply have a list of host names to block, or it can handle a full blown hosts file.
+     * It will strip out comments, references to the base IP address and just extract the
+     * domains to be used.
+     *
+     * @return a Completable that will load the hosts file into memory.
+     */
+    @NonNull
+    private Completable loadHostsFile() {
+        return Completable.create(new CompletableAction() {
             @Override
-            public void run() {
-                AssetManager asset = context.getAssets();
-                BufferedReader reader = null;
+            public void onSubscribe(@NonNull CompletableSubscriber subscriber) {
+                AssetManager asset = mApplication.getAssets();
+                BufferedReader reader = null, reader2=null;
+                //noinspection TryFinallyCanBeTryWithResources
                 try {
-                    //noinspection IOResourceOpenedButNotSafelyClosed
                     reader = new BufferedReader(new InputStreamReader(
-                            asset.open(BLOCKED_DOMAINS_LIST_FILE_NAME)));
-                    String line;
+                        asset.open(BLOCKED_DOMAINS_LIST_FILE_NAME)));
+                    reader2 = new BufferedReader(new InputStreamReader(
+                            asset.open(BLOCKED_DOMAINS_LIST_FILE_NAME2)));
+                    StringBuilder lineBuilder = new StringBuilder();
+                    String line, line2;
+                    long time = System.currentTimeMillis();
+
                     while ((line = reader.readLine()) != null) {
-                        if (!line.isEmpty() && !line.startsWith(COMMENT)) {
-                            line = line.replace(LOCAL_IP_V4, EMPTY)
-                                    .replace(LOCAL_IP_V4_ALT, EMPTY)
-                                    .replace(LOCAL_IP_V6, EMPTY)
-                                    .replace(TAB, EMPTY);
-                            int comment = line.indexOf(COMMENT);
+                        lineBuilder.append(line);
+
+                        if (!StringBuilderUtils.isEmpty(lineBuilder) &&
+                            !StringBuilderUtils.startsWith(lineBuilder, COMMENT)) {
+                            StringBuilderUtils.replace(lineBuilder, LOCAL_IP_V4, EMPTY);
+                            StringBuilderUtils.replace(lineBuilder, LOCAL_IP_V4_ALT, EMPTY);
+                            StringBuilderUtils.replace(lineBuilder, LOCAL_IP_V6, EMPTY);
+                            StringBuilderUtils.replace(lineBuilder, TAB, EMPTY);
+
+                            int comment = lineBuilder.indexOf(COMMENT);
                             if (comment >= 0) {
-                                line = line.substring(0, comment);
+                                lineBuilder.replace(comment, lineBuilder.length(), EMPTY);
                             }
-                            line = line.trim();
-                            if (!line.isEmpty() && !line.equals(LOCALHOST)) {
-                                while (line.contains(SPACE)) {
-                                    int space = line.indexOf(SPACE);
-                                    String host = line.substring(0, space);
-                                    mBlockedDomainsList.add(host.trim());
-                                    line = line.substring(space, line.length()).trim();
+
+                            StringBuilderUtils.trim(lineBuilder);
+
+                            if (!StringBuilderUtils.isEmpty(lineBuilder) &&
+                                !StringBuilderUtils.equals(lineBuilder, LOCALHOST)) {
+                                while (StringBuilderUtils.contains(lineBuilder, SPACE)) {
+                                    int space = lineBuilder.indexOf(SPACE);
+                                    StringBuilder partial = StringBuilderUtils.substring(lineBuilder, 0, space);
+                                    StringBuilderUtils.trim(partial);
+
+                                    String partialLine = partial.toString();
+                                    mBlockedDomainsList.add(partialLine);
+                                    StringBuilderUtils.replace(lineBuilder, partialLine, EMPTY);
+                                    StringBuilderUtils.trim(lineBuilder);
                                 }
-                                mBlockedDomainsList.add(line.trim());
+                                if (lineBuilder.length() > 0) {
+                                    mBlockedDomainsList.add(lineBuilder.toString());
+                                }
                             }
                         }
+                        lineBuilder.setLength(0);
                     }
+                    //host2
+                    while ((line2 = reader2.readLine()) != null) {
+                        lineBuilder.append(line2);
+
+                        if (!StringBuilderUtils.isEmpty(lineBuilder) &&
+                                !StringBuilderUtils.startsWith(lineBuilder, COMMENT)) {
+                            StringBuilderUtils.replace(lineBuilder, LOCAL_IP_V4, EMPTY);
+                            StringBuilderUtils.replace(lineBuilder, LOCAL_IP_V4_ALT, EMPTY);
+                            StringBuilderUtils.replace(lineBuilder, LOCAL_IP_V6, EMPTY);
+                            StringBuilderUtils.replace(lineBuilder, TAB, EMPTY);
+
+                            int comment = lineBuilder.indexOf(COMMENT);
+                            if (comment >= 0) {
+                                lineBuilder.replace(comment, lineBuilder.length(), EMPTY);
+                            }
+
+                            StringBuilderUtils.trim(lineBuilder);
+
+                            if (!StringBuilderUtils.isEmpty(lineBuilder) &&
+                                    !StringBuilderUtils.equals(lineBuilder, LOCALHOST)) {
+                                while (StringBuilderUtils.contains(lineBuilder, SPACE)) {
+                                    int space = lineBuilder.indexOf(SPACE);
+                                    StringBuilder partial = StringBuilderUtils.substring(lineBuilder, 0, space);
+                                    StringBuilderUtils.trim(partial);
+
+                                    String partialLine = partial.toString();
+                                    mBlockedDomainsList.add(partialLine);
+                                    StringBuilderUtils.replace(lineBuilder, partialLine, EMPTY);
+                                    StringBuilderUtils.trim(lineBuilder);
+                                }
+                                if (lineBuilder.length() > 0) {
+                                    mBlockedDomainsList.add(lineBuilder.toString());
+                                }
+                            }
+                        }
+                        lineBuilder.setLength(0);
+                    }
+                    Log.d(TAG, "Loaded ad list in: " + (System.currentTimeMillis() - time) + " ms");
                 } catch (IOException e) {
                     Log.wtf(TAG, "Reading blocked domains list from file '"
-                            + BLOCKED_DOMAINS_LIST_FILE_NAME + "' failed.", e);
+                        + BLOCKED_DOMAINS_LIST_FILE_NAME + "' failed.", e);
                 } finally {
                     Utils.close(reader);
                 }
             }
         });
     }
+
 }

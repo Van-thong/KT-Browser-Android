@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
+import android.preference.PreferenceCategory;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.view.Gravity;
@@ -24,6 +25,7 @@ import kttech.software.ktbrowser.dialog.BrowserDialog;
 
 public class DisplaySettingsFragment extends LightningPreferenceFragment implements Preference.OnPreferenceClickListener, Preference.OnPreferenceChangeListener {
 
+    private static final String SETTINGS_DISPLAY = "display";
     private static final String SETTINGS_HIDESTATUSBAR = "fullScreenOption";
     private static final String SETTINGS_FULLSCREEN = "fullscreen";
     private static final String SETTINGS_VIEWPORT = "wideViewPort";
@@ -33,6 +35,7 @@ public class DisplaySettingsFragment extends LightningPreferenceFragment impleme
     private static final String SETTINGS_TEXTSIZE = "text_size";
     private static final String SETTINGS_DRAWERTABS = "cb_drawertabs";
     private static final String SETTINGS_SWAPTABS = "cb_swapdrawers";
+    private static final String SETTINGS_BLACK_STATUS = "black_status_bar";
 
     private static final float XXLARGE = 30.0f;
     private static final float XLARGE = 26.0f;
@@ -42,29 +45,10 @@ public class DisplaySettingsFragment extends LightningPreferenceFragment impleme
     private static final float XSMALL = 10.0f;
 
     private Activity mActivity;
-    private CheckBoxPreference cbstatus, cbfullscreen, cbviewport, cboverview, cbreflow;
-    private Preference theme;
+    private Preference mTheme;
     private String[] mThemeOptions;
     private int mCurrentTheme;
-
-    private static float getTextSize(int size) {
-        switch (size) {
-            case 0:
-                return XSMALL;
-            case 1:
-                return SMALL;
-            case 2:
-                return MEDIUM;
-            case 3:
-                return LARGE;
-            case 4:
-                return XLARGE;
-            case 5:
-                return XXLARGE;
-            default:
-                return MEDIUM;
-        }
-    }
+    private CheckBoxPreference cbFullScreen, cbSwapTabs;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -82,35 +66,39 @@ public class DisplaySettingsFragment extends LightningPreferenceFragment impleme
         mThemeOptions = this.getResources().getStringArray(R.array.themes);
         mCurrentTheme = mPreferenceManager.getUseTheme();
 
-        theme = findPreference(SETTINGS_THEME);
-        Preference textsize = findPreference(SETTINGS_TEXTSIZE);
-        cbstatus = (CheckBoxPreference) findPreference(SETTINGS_HIDESTATUSBAR);
-        cbfullscreen = (CheckBoxPreference) findPreference(SETTINGS_FULLSCREEN);
-        cbviewport = (CheckBoxPreference) findPreference(SETTINGS_VIEWPORT);
-        cboverview = (CheckBoxPreference) findPreference(SETTINGS_OVERVIEWMODE);
-        cbreflow = (CheckBoxPreference) findPreference(SETTINGS_REFLOW);
+        mTheme = findPreference(SETTINGS_THEME);
+        Preference textSize = findPreference(SETTINGS_TEXTSIZE);
+        CheckBoxPreference cbStatus = (CheckBoxPreference) findPreference(SETTINGS_HIDESTATUSBAR);
+        cbFullScreen = (CheckBoxPreference) findPreference(SETTINGS_FULLSCREEN);
+        cbSwapTabs = (CheckBoxPreference) findPreference(SETTINGS_SWAPTABS);
+        CheckBoxPreference cbViewPort = (CheckBoxPreference) findPreference(SETTINGS_VIEWPORT);
+        CheckBoxPreference cbOverview = (CheckBoxPreference) findPreference(SETTINGS_OVERVIEWMODE);
+        CheckBoxPreference cbReflow = (CheckBoxPreference) findPreference(SETTINGS_REFLOW);
+        CheckBoxPreference cbBlackStatus = (CheckBoxPreference) findPreference(SETTINGS_BLACK_STATUS);
         CheckBoxPreference cbDrawerTabs = (CheckBoxPreference) findPreference(SETTINGS_DRAWERTABS);
-        CheckBoxPreference cbSwapTabs = (CheckBoxPreference) findPreference(SETTINGS_SWAPTABS);
 
-        theme.setOnPreferenceClickListener(this);
-        textsize.setOnPreferenceClickListener(this);
-        cbstatus.setOnPreferenceChangeListener(this);
-        cbfullscreen.setOnPreferenceChangeListener(this);
-        cbviewport.setOnPreferenceChangeListener(this);
-        cboverview.setOnPreferenceChangeListener(this);
-        cbreflow.setOnPreferenceChangeListener(this);
+        mTheme.setOnPreferenceClickListener(this);
+        textSize.setOnPreferenceClickListener(this);
+        cbStatus.setOnPreferenceChangeListener(this);
+        cbFullScreen.setOnPreferenceChangeListener(this);
+        cbViewPort.setOnPreferenceChangeListener(this);
+        cbOverview.setOnPreferenceChangeListener(this);
+        cbReflow.setOnPreferenceChangeListener(this);
+        cbBlackStatus.setOnPreferenceChangeListener(this);
         cbDrawerTabs.setOnPreferenceChangeListener(this);
         cbSwapTabs.setOnPreferenceChangeListener(this);
 
-        cbstatus.setChecked(mPreferenceManager.getHideStatusBarEnabled());
-        cbfullscreen.setChecked(mPreferenceManager.getFullScreenEnabled());
-        cbviewport.setChecked(mPreferenceManager.getUseWideViewportEnabled());
-        cboverview.setChecked(mPreferenceManager.getOverviewModeEnabled());
-        cbreflow.setChecked(mPreferenceManager.getTextReflowEnabled());
+        cbStatus.setChecked(mPreferenceManager.getHideStatusBarEnabled());
+        cbFullScreen.setChecked(mPreferenceManager.getFullScreenEnabled());
+        cbViewPort.setChecked(mPreferenceManager.getUseWideViewportEnabled());
+        cbOverview.setChecked(mPreferenceManager.getOverviewModeEnabled());
+        cbReflow.setChecked(mPreferenceManager.getTextReflowEnabled());
+        cbBlackStatus.setChecked(mPreferenceManager.getUseBlackStatusBar());
         cbDrawerTabs.setChecked(mPreferenceManager.getShowTabsInDrawer(true));
         cbSwapTabs.setChecked(mPreferenceManager.getBookmarksAndTabsSwapped());
 
-        theme.setSummary(mThemeOptions[mPreferenceManager.getUseTheme()]);
+        mTheme.setSummary(mThemeOptions[mPreferenceManager.getUseTheme()]);
+        fixDisplay();
     }
 
     @Override
@@ -137,29 +125,27 @@ public class DisplaySettingsFragment extends LightningPreferenceFragment impleme
         switch (preference.getKey()) {
             case SETTINGS_HIDESTATUSBAR:
                 mPreferenceManager.setHideStatusBarEnabled(checked);
-                cbstatus.setChecked(checked);
                 return true;
             case SETTINGS_FULLSCREEN:
                 mPreferenceManager.setFullScreenEnabled(checked);
-                cbfullscreen.setChecked(checked);
                 return true;
             case SETTINGS_VIEWPORT:
                 mPreferenceManager.setUseWideViewportEnabled(checked);
-                cbviewport.setChecked(checked);
                 return true;
             case SETTINGS_OVERVIEWMODE:
                 mPreferenceManager.setOverviewModeEnabled(checked);
-                cboverview.setChecked(checked);
                 return true;
             case SETTINGS_REFLOW:
                 mPreferenceManager.setTextReflowEnabled(checked);
-                cbreflow.setChecked(checked);
                 return true;
             case SETTINGS_DRAWERTABS:
                 mPreferenceManager.setShowTabsInDrawer(checked);
                 return true;
             case SETTINGS_SWAPTABS:
                 mPreferenceManager.setBookmarkAndTabsSwapped(checked);
+                return true;
+            case SETTINGS_BLACK_STATUS:
+                mPreferenceManager.setUseBlackStatusBar(checked);
                 return true;
             default:
                 return false;
@@ -169,7 +155,7 @@ public class DisplaySettingsFragment extends LightningPreferenceFragment impleme
     private void textSizePicker() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
-        LinearLayout view = (LinearLayout) inflater.inflate(R.layout.seek_layout, null);
+        LinearLayout view = (LinearLayout) inflater.inflate(R.layout.dialog_seek_bar, null);
         final SeekBar bar = (SeekBar) view.findViewById(R.id.text_size_seekbar);
         final TextView sample = new TextView(getActivity());
         sample.setText(R.string.untitled);
@@ -194,6 +180,25 @@ public class DisplaySettingsFragment extends LightningPreferenceFragment impleme
         BrowserDialog.setDialogSize(mActivity, dialog);
     }
 
+    private static float getTextSize(int size) {
+        switch (size) {
+            case 0:
+                return XSMALL;
+            case 1:
+                return SMALL;
+            case 2:
+                return MEDIUM;
+            case 3:
+                return LARGE;
+            case 4:
+                return XLARGE;
+            case 5:
+                return XXLARGE;
+            default:
+                return MEDIUM;
+        }
+    }
+
     private void themePicker() {
         AlertDialog.Builder picker = new AlertDialog.Builder(mActivity);
         picker.setTitle(getResources().getString(R.string.theme));
@@ -205,20 +210,20 @@ public class DisplaySettingsFragment extends LightningPreferenceFragment impleme
             public void onClick(DialogInterface dialog, int which) {
                 mPreferenceManager.setUseTheme(which);
                 if (which < mThemeOptions.length) {
-                    theme.setSummary(mThemeOptions[which]);
+                    mTheme.setSummary(mThemeOptions[which]);
                 }
             }
         });
         picker.setPositiveButton(getResources().getString(R.string.action_ok),
-                new DialogInterface.OnClickListener() {
+            new DialogInterface.OnClickListener() {
 
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (mCurrentTheme != mPreferenceManager.getUseTheme()) {
-                            getActivity().onBackPressed();
-                        }
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (mCurrentTheme != mPreferenceManager.getUseTheme()) {
+                        getActivity().onBackPressed();
                     }
-                });
+                }
+            });
         picker.setOnCancelListener(new DialogInterface.OnCancelListener() {
             @Override
             public void onCancel(DialogInterface dialog) {
@@ -233,15 +238,13 @@ public class DisplaySettingsFragment extends LightningPreferenceFragment impleme
 
     private static class TextSeekBarListener implements SeekBar.OnSeekBarChangeListener {
 
-        private final TextView sample;
+        private final TextView mSample;
 
-        public TextSeekBarListener(TextView sample) {
-            this.sample = sample;
-        }
+        public TextSeekBarListener(TextView sample) {this.mSample = sample;}
 
         @Override
         public void onProgressChanged(SeekBar view, int size, boolean user) {
-            this.sample.setTextSize(getTextSize(size));
+            this.mSample.setTextSize(getTextSize(size));
         }
 
         @Override
@@ -252,5 +255,10 @@ public class DisplaySettingsFragment extends LightningPreferenceFragment impleme
         public void onStopTrackingTouch(SeekBar arg0) {
         }
 
+    }
+    public void fixDisplay(){
+        PreferenceCategory display_settings = (PreferenceCategory) findPreference(SETTINGS_DISPLAY);
+        display_settings.removePreference(cbFullScreen);
+        display_settings.removePreference(cbSwapTabs);
     }
 }

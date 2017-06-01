@@ -14,8 +14,9 @@ import kttech.software.ktbrowser.R;
 
 public class AboutSettingsFragment extends PreferenceFragment {
 
-    private static final String SETTINGS_VERSION = "pref_version";
     private Activity mActivity;
+
+    private static final String SETTINGS_VERSION = "pref_version";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

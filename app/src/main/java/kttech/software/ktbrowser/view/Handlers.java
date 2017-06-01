@@ -10,8 +10,7 @@ import android.support.annotation.NonNull;
  */
 public final class Handlers {
 
-    @NonNull
-    public static final Handler MAIN = new Handler(Looper.getMainLooper());
+    private Handlers() {}
 
     static {
         if (Looper.getMainLooper() == null) {
@@ -19,7 +18,7 @@ public final class Handlers {
         }
     }
 
-    private Handlers() {
-    }
+    @NonNull
+    public static final Handler MAIN = new Handler(Looper.getMainLooper());
 
 }

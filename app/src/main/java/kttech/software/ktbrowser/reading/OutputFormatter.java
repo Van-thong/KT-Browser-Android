@@ -2,13 +2,14 @@ package kttech.software.ktbrowser.reading;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
-import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 
 /**
  * @author goose | jim
@@ -22,10 +23,10 @@ public class OutputFormatter {
     private static final int MIN_FIRST_PARAGRAPH_TEXT = 50; // Min size of first paragraph
     private static final int MIN_PARAGRAPH_TEXT = 30;       // Min size of any other paragraphs
     private static final List<String> NODES_TO_REPLACE = Arrays.asList("strong", "b", "i");
+    private Pattern unlikelyPattern = Pattern.compile("display:none|visibility:hidden");
     private final int minFirstParagraphText;
     private final int minParagraphText;
     private final List<String> nodesToReplace;
-    private Pattern unlikelyPattern = Pattern.compile("display:none|visibility:hidden");
     private String nodesToKeepCssSelector = "p, ol";
 
     public OutputFormatter() {
@@ -45,33 +46,6 @@ public class OutputFormatter {
         this.minFirstParagraphText = minFirstParagraphText;
         this.minParagraphText = minParagraphText;
         this.nodesToReplace = nodesToReplace;
-    }
-
-    private static void setParagraphIndex(Element node, String tagName) {
-        int paragraphIndex = 0;
-        for (Element e : node.select(tagName)) {
-            e.attr("paragraphIndex", Integer.toString(paragraphIndex++));
-        }
-    }
-
-    private static int getParagraphIndex(Element el) {
-        try {
-            return Integer.parseInt(el.attr("paragraphIndex"));
-        } catch (NumberFormatException ex) {
-            return -1;
-        }
-    }
-
-    private static int getScore(Element el) {
-        try {
-            return Integer.parseInt(el.attr("gravityScore"));
-        } catch (Exception ex) {
-            return 0;
-        }
-    }
-
-    private static boolean lastCharIsWhitespace(StringBuilder accum) {
-        return accum.length() != 0 && Character.isWhitespace(accum.charAt(accum.length() - 1));
     }
 
     /**
@@ -108,7 +82,7 @@ public class OutputFormatter {
             str = topNode.text();
         }
 
-        // if jsoup failed to parse the whole html now parse this smaller
+        // if jsoup failed to parse the whole html now parse this smaller 
         // snippet again to avoid html tags disturbing our text:
         return Jsoup.parse(str).text();
     }
@@ -160,11 +134,34 @@ public class OutputFormatter {
         return countOfP;
     }
 
+    private static void setParagraphIndex(Element node, String tagName) {
+        int paragraphIndex = 0;
+        for (Element e : node.select(tagName)) {
+            e.attr("paragraphIndex", Integer.toString(paragraphIndex++));
+        }
+    }
+
     private int getMinParagraph(int paragraphIndex) {
         if (paragraphIndex < 1) {
             return minFirstParagraphText;
         } else {
             return minParagraphText;
+        }
+    }
+
+    private static int getParagraphIndex(Element el) {
+        try {
+            return Integer.parseInt(el.attr("paragraphIndex"));
+        } catch (NumberFormatException ex) {
+            return -1;
+        }
+    }
+
+    private static int getScore(Element el) {
+        try {
+            return Integer.parseInt(el.attr("gravityScore"));
+        } catch (Exception ex) {
+            return 0;
         }
     }
 
@@ -196,6 +193,10 @@ public class OutputFormatter {
                 appendTextSkipHidden(element, accum, indent + 1);
             }
         }
+    }
+
+    private static boolean lastCharIsWhitespace(StringBuilder accum) {
+        return accum.length() != 0 && Character.isWhitespace(accum.charAt(accum.length() - 1));
     }
 
     private String node2Text(Element el) {

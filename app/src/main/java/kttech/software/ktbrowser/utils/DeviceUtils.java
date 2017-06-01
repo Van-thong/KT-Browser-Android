@@ -10,8 +10,7 @@ import android.view.WindowManager;
 
 public final class DeviceUtils {
 
-    private DeviceUtils() {
-    }
+    private DeviceUtils() {}
 
     public static int getScreenWidth(@NonNull Context context) {
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);

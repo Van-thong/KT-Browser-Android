@@ -14,12 +14,15 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.WebView;
 
-import com.anthonycr.bonsai.Action;
-import com.anthonycr.bonsai.Observable;
-import com.anthonycr.bonsai.OnSubscribe;
+import com.anthonycr.bonsai.Completable;
+import com.anthonycr.bonsai.CompletableAction;
+import com.anthonycr.bonsai.CompletableSubscriber;
 import com.anthonycr.bonsai.Schedulers;
-import com.anthonycr.bonsai.Subscriber;
-import com.squareup.otto.Bus;
+import com.anthonycr.bonsai.SingleOnSubscribe;
+import com.anthonycr.bonsai.Stream;
+import com.anthonycr.bonsai.StreamAction;
+import com.anthonycr.bonsai.StreamOnSubscribe;
+import com.anthonycr.bonsai.StreamSubscriber;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,11 +35,10 @@ import kttech.software.ktbrowser.constant.BookmarkPage;
 import kttech.software.ktbrowser.constant.Constants;
 import kttech.software.ktbrowser.constant.HistoryPage;
 import kttech.software.ktbrowser.constant.StartPage;
-import kttech.software.ktbrowser.database.BookmarkManager;
-import kttech.software.ktbrowser.database.HistoryDatabase;
 import kttech.software.ktbrowser.dialog.BrowserDialog;
 import kttech.software.ktbrowser.preference.PreferenceManager;
 import kttech.software.ktbrowser.utils.FileUtils;
+import kttech.software.ktbrowser.utils.Preconditions;
 import kttech.software.ktbrowser.utils.UrlUtils;
 import kttech.software.ktbrowser.view.LightningView;
 
@@ -47,31 +49,30 @@ import kttech.software.ktbrowser.view.LightningView;
  */
 public class TabsManager {
 
-    private static final String TAG = TabsManager.class.getSimpleName();
+    private static final String TAG = "TabsManager";
+
     private static final String BUNDLE_KEY = "WEBVIEW_";
     private static final String URL_KEY = "URL_KEY";
     private static final String BUNDLE_STORAGE = "SAVED_TABS.parcel";
 
-    private final List<LightningView> mTabList = new ArrayList<>(1);
-    private final List<Runnable> mPostInitializationWorkList = new ArrayList<>();
-    @Inject
-    PreferenceManager mPreferenceManager;
-    @Inject
-    BookmarkManager mBookmarkManager;
-    @Inject
-    HistoryDatabase mHistoryManager;
-    @Inject
-    Bus mEventBus;
-    @Inject
-    Application mApp;
-    @Nullable
-    private LightningView mCurrentTab;
-    @Nullable
-    private TabNumberChangedListener mTabNumberListener;
+    @NonNull private final List<LightningView> mTabList = new ArrayList<>(1);
+    @Nullable private LightningView mCurrentTab;
+    @Nullable private TabNumberChangedListener mTabNumberListener;
+
     private boolean mIsInitialized = false;
+    @NonNull private final List<Runnable> mPostInitializationWorkList = new ArrayList<>();
+
+    @Inject PreferenceManager mPreferenceManager;
+    @Inject Application mApp;
 
     public TabsManager() {
         BrowserApp.getAppComponent().inject(this);
+    }
+
+    // TODO remove and make presenter call new tab methods so it always knows
+    @Deprecated
+    public interface TabNumberChangedListener {
+        void tabNumberChanged(int newNumber);
     }
 
     public void setTabNumberChangedListener(@Nullable TabNumberChangedListener listener) {
@@ -98,20 +99,20 @@ public class TabsManager {
     }
 
     /**
-     * Restores old tabs that were open before the software
-     * was closed. Handles the intent used to open the software.
+     * Restores old tabs that were open before the browser
+     * was closed. Handles the intent used to open the browser.
      *
      * @param activity  the activity needed to create tabs.
-     * @param intent    the intent that started the software activity.
+     * @param intent    the intent that started the browser activity.
      * @param incognito whether or not we are in incognito mode.
      */
-    public synchronized Observable<Void> initializeTabs(@NonNull final Activity activity,
-                                                        @Nullable final Intent intent,
-                                                        final boolean incognito) {
-        return Observable.create(new Action<Void>() {
+    @NonNull
+    public synchronized Completable initializeTabs(@NonNull final Activity activity,
+                                                   @Nullable final Intent intent,
+                                                   final boolean incognito) {
+        return Completable.create(new CompletableAction() {
             @Override
-            public void onSubscribe(@NonNull final Subscriber<Void> subscriber) {
-
+            public void onSubscribe(@NonNull CompletableSubscriber subscriber) {
                 // Make sure we start with a clean tab list
                 shutdown();
 
@@ -147,33 +148,63 @@ public class TabsManager {
     }
 
     private void restoreLostTabs(@Nullable final String url, @NonNull final Activity activity,
-                                 @NonNull final Subscriber subscriber) {
+                                 @NonNull final CompletableSubscriber subscriber) {
 
-        restoreState().subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.main()).subscribe(new OnSubscribe<Bundle>() {
-            @Override
-            public void onNext(Bundle item) {
-                LightningView tab = newTab(activity, "", false);
-                String url = item.getString(URL_KEY);
-                if (url != null && tab.getWebView() != null) {
-                    if (UrlUtils.isBookmarkUrl(url)) {
-                        new BookmarkPage(tab, activity, mBookmarkManager).load();
-                    } else if (UrlUtils.isStartPageUrl(url)) {
-                        new StartPage(tab, mApp).load();
-                    } else if (UrlUtils.isHistoryUrl(url)) {
-                        new HistoryPage(tab, mApp, mHistoryManager).load();
+        restoreState()
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.main())
+            .subscribe(new StreamOnSubscribe<Bundle>() {
+                @Override
+                public void onNext(@Nullable Bundle item) {
+                    final LightningView tab = newTab(activity, "", false);
+                    Preconditions.checkNonNull(item);
+                    String url = item.getString(URL_KEY);
+                    if (url != null && tab.getWebView() != null) {
+                        if (UrlUtils.isBookmarkUrl(url)) {
+                            new BookmarkPage(activity).getBookmarkPage()
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(Schedulers.main())
+                                .subscribe(new SingleOnSubscribe<String>() {
+                                    @Override
+                                    public void onItem(@Nullable String item) {
+                                        Preconditions.checkNonNull(item);
+                                        tab.loadUrl(item);
+                                    }
+                                });
+                        } else if (UrlUtils.isStartPageUrl(url)) {
+                            new StartPage().getHomepage()
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(Schedulers.main())
+                                .subscribe(new SingleOnSubscribe<String>() {
+                                    @Override
+                                    public void onItem(@Nullable String item) {
+                                        Preconditions.checkNonNull(item);
+                                        tab.loadUrl(item);
+                                    }
+                                });
+                        } else if (UrlUtils.isHistoryUrl(url)) {
+                            new HistoryPage().getHistoryPage()
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(Schedulers.main())
+                                .subscribe(new SingleOnSubscribe<String>() {
+                                    @Override
+                                    public void onItem(@Nullable String item) {
+                                        Preconditions.checkNonNull(item);
+                                        tab.loadUrl(item);
+                                    }
+                                });
+                        }
+                    } else if (tab.getWebView() != null) {
+                        tab.getWebView().restoreState(item);
                     }
-                } else if (tab.getWebView() != null) {
-                    tab.getWebView().restoreState(item);
                 }
-            }
 
-            @Override
-            public void onComplete() {
-                if (url != null) {
-                    if (url.startsWith(Constants.FILE)) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-                        Dialog dialog = builder.setCancelable(true)
+                @Override
+                public void onComplete() {
+                    if (url != null) {
+                        if (url.startsWith(Constants.FILE)) {
+                            AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+                            Dialog dialog = builder.setCancelable(true)
                                 .setTitle(R.string.title_warning)
                                 .setMessage(R.string.message_blocked_local)
                                 .setOnDismissListener(new DialogInterface.OnDismissListener() {
@@ -193,28 +224,28 @@ public class TabsManager {
                                         newTab(activity, url, false);
                                     }
                                 }).show();
-                        BrowserDialog.setDialogSize(activity, dialog);
+                            BrowserDialog.setDialogSize(activity, dialog);
+                        } else {
+                            newTab(activity, url, false);
+                            if (mTabList.isEmpty()) {
+                                newTab(activity, null, false);
+                            }
+                            finishInitialization();
+                            subscriber.onComplete();
+                        }
                     } else {
-                        newTab(activity, url, false);
                         if (mTabList.isEmpty()) {
                             newTab(activity, null, false);
                         }
                         finishInitialization();
                         subscriber.onComplete();
                     }
-                } else {
-                    if (mTabList.isEmpty()) {
-                        newTab(activity, null, false);
-                    }
-                    finishInitialization();
-                    subscriber.onComplete();
                 }
-            }
-        });
+            });
     }
 
     /**
-     * Method used to resume all the tabs in the software.
+     * Method used to resume all the tabs in the browser.
      * This is necessary because we cannot pause the
      * WebView when the app is open currently due to a
      * bug in the WebView, where calling onResume doesn't
@@ -237,7 +268,7 @@ public class TabsManager {
     }
 
     /**
-     * Method used to pause all the tabs in the software.
+     * Method used to pause all the tabs in the browser.
      * This is necessary because we cannot pause the
      * WebView when the app is open currently due to a
      * bug in the WebView, where calling onResume doesn't
@@ -333,6 +364,7 @@ public class TabsManager {
     public synchronized int last() {
         return mTabList.size() - 1;
     }
+
 
     /**
      * The last tab in the tab manager.
@@ -439,7 +471,7 @@ public class TabsManager {
      */
     public void saveState() {
         Bundle outState = new Bundle(ClassLoader.getSystemClassLoader());
-        Log.d(Constants.TAG, "Saving tab state");
+        Log.d(TAG, "Saving tab state");
         for (int n = 0; n < mTabList.size(); n++) {
             LightningView tab = mTabList.get(n);
             if (TextUtils.isEmpty(tab.getUrl())) {
@@ -460,7 +492,7 @@ public class TabsManager {
     /**
      * Use this method to clear the saved
      * state if you do not wish it to be
-     * restored when the software next starts.
+     * restored when the browser next starts.
      */
     public void clearSavedState() {
         FileUtils.deleteBundleInStorage(mApp, BUNDLE_STORAGE);
@@ -473,13 +505,13 @@ public class TabsManager {
      * and will delete the saved instance file when
      * restoration is complete.
      */
-    private Observable<Bundle> restoreState() {
-        return Observable.create(new Action<Bundle>() {
+    private Stream<Bundle> restoreState() {
+        return Stream.create(new StreamAction<Bundle>() {
             @Override
-            public void onSubscribe(@NonNull Subscriber<Bundle> subscriber) {
+            public void onSubscribe(@NonNull StreamSubscriber<Bundle> subscriber) {
                 Bundle savedState = FileUtils.readBundleFromStorage(mApp, BUNDLE_STORAGE);
                 if (savedState != null) {
-                    Log.d(Constants.TAG, "Restoring previous WebView state now");
+                    Log.d(TAG, "Restoring previous WebView state now");
                     for (String key : savedState.keySet()) {
                         if (key.startsWith(BUNDLE_KEY)) {
                             subscriber.onNext(savedState.getBundle(key));
@@ -490,17 +522,6 @@ public class TabsManager {
                 subscriber.onComplete();
             }
         });
-    }
-
-    /**
-     * Return the {@link WebView} associated to the current tab,
-     * or null if there is no current tab.
-     *
-     * @return a {@link WebView} or null if there is no current tab.
-     */
-    @Nullable
-    public synchronized WebView getCurrentWebView() {
-        return mCurrentTab != null ? mCurrentTab.getWebView() : null;
     }
 
     /**
@@ -535,6 +556,26 @@ public class TabsManager {
     }
 
     /**
+     * Returns the {@link LightningView} with
+     * the provided hash, or null if there is
+     * no tab with the hash.
+     *
+     * @param hashCode the hashcode.
+     * @return the tab with an identical hash, or null.
+     */
+    @Nullable
+    public synchronized LightningView getTabForHashCode(int hashCode) {
+        for (LightningView tab : mTabList) {
+            if (tab.getWebView() != null) {
+                if (tab.getWebView().hashCode() == hashCode) {
+                    return tab;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * Switch the current tab to the one at the given position.
      * It returns the selected tab that has been switced to.
      *
@@ -553,12 +594,6 @@ public class TabsManager {
             }
             return tab;
         }
-    }
-
-    // TODO remove and make presenter call new tab methods so it always knows
-    @Deprecated
-    public interface TabNumberChangedListener {
-        void tabNumberChanged(int newNumber);
     }
 
 }

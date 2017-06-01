@@ -50,7 +50,39 @@ public class HtmlFetcher {
         SHelper.enableAnySSL();
     }
 
-    private final AtomicInteger cacheCounter = new AtomicInteger(0);
+    public static void main(String[] args) throws Exception {
+        BufferedReader reader = null;
+        BufferedWriter writer = null;
+        try {
+
+            //noinspection IOResourceOpenedButNotSafelyClosed
+            reader = new BufferedReader(new FileReader("urls.txt"));
+            String line;
+            Set<String> existing = new LinkedHashSet<>();
+            while ((line = reader.readLine()) != null) {
+                int index1 = line.indexOf('\"');
+                int index2 = line.indexOf('\"', index1 + 1);
+                String url = line.substring(index1 + 1, index2);
+                String domainStr = SHelper.extractDomain(url, true);
+                String counterStr = "";
+                // TODO more similarities
+                if (existing.contains(domainStr))
+                    counterStr = "2";
+                else
+                    existing.add(domainStr);
+
+                String html = new HtmlFetcher().fetchAsString(url, 2000);
+                String outFile = domainStr + counterStr + ".html";
+                //noinspection IOResourceOpenedButNotSafelyClosed
+                writer = new BufferedWriter(new FileWriter(outFile));
+                writer.write(html);
+            }
+        } finally {
+            Utils.close(reader);
+            Utils.close(writer);
+        }
+    }
+
     private String referrer = "http://jetsli.de/crawler";
     private String userAgent = "Mozilla/5.0 (compatible; Jetslide; +" + referrer + ')';
     private String cacheControl = "max-age=0";
@@ -58,6 +90,7 @@ public class HtmlFetcher {
     private String accept = "application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5";
     private String charset = "UTF-8";
     private SCache cache;
+    private final AtomicInteger cacheCounter = new AtomicInteger(0);
     private int maxTextLength = -1;
     private ArticleTextExtractor extractor = new ArticleTextExtractor();
     private Set<String> furtherResolveNecessary = new LinkedHashSet<String>() {
@@ -94,96 +127,21 @@ public class HtmlFetcher {
     public HtmlFetcher() {
     }
 
-    public static void main(String[] args) throws Exception {
-        BufferedReader reader = null;
-        BufferedWriter writer = null;
-        try {
-
-            //noinspection IOResourceOpenedButNotSafelyClosed
-            reader = new BufferedReader(new FileReader("urls.txt"));
-            String line;
-            Set<String> existing = new LinkedHashSet<>();
-            while ((line = reader.readLine()) != null) {
-                int index1 = line.indexOf('\"');
-                int index2 = line.indexOf('\"', index1 + 1);
-                String url = line.substring(index1 + 1, index2);
-                String domainStr = SHelper.extractDomain(url, true);
-                String counterStr = "";
-                // TODO more similarities
-                if (existing.contains(domainStr))
-                    counterStr = "2";
-                else
-                    existing.add(domainStr);
-
-                String html = new HtmlFetcher().fetchAsString(url, 2000);
-                String outFile = domainStr + counterStr + ".html";
-                //noinspection IOResourceOpenedButNotSafelyClosed
-                writer = new BufferedWriter(new FileWriter(outFile));
-                writer.write(html);
-            }
-        } finally {
-            Utils.close(reader);
-            Utils.close(writer);
-        }
-    }
-
-    // Ugly hack to break free from any cached versions, a few URLs required this.
-    private static String getURLtoBreakCache(String url) {
-        try {
-            URL aURL = new URL(url);
-            if (aURL.getQuery() != null && aURL.getQuery().isEmpty()) {
-                return url + "?1";
-            } else {
-                return url + "&1";
-            }
-        } catch (MalformedURLException e) {
-            return url;
-        }
-    }
-
-    private static String fixUrl(String url, String urlOrPath) {
-        return SHelper.useDomainOfFirstArg4Second(url, urlOrPath);
-    }
-
-    private static Converter createConverter(String url) {
-        return new Converter(url);
-    }
-
-    /**
-     * Takes a URI that was decoded as ISO-8859-1 and applies percent-encoding
-     * to non-ASCII characters. Workaround for broken origin servers that send
-     * UTF-8 in the Location: header.
-     */
-    private static String encodeUriFromHeader(String badLocation) {
-        StringBuilder sb = new StringBuilder(badLocation.length());
-
-        for (char ch : badLocation.toCharArray()) {
-            if (ch < (char) 128) {
-                sb.append(ch);
-            } else {
-                // this is ONLY valid if the uri was decoded using ISO-8859-1
-                sb.append(String.format("%%%02X", (int) ch));
-            }
-        }
-
-        return sb.toString();
+    public void setExtractor(ArticleTextExtractor extractor) {
+        this.extractor = extractor;
     }
 
     public ArticleTextExtractor getExtractor() {
         return extractor;
     }
 
-    public void setExtractor(ArticleTextExtractor extractor) {
-        this.extractor = extractor;
+    public HtmlFetcher setCache(SCache cache) {
+        this.cache = cache;
+        return this;
     }
 
     public SCache getCache() {
         return cache;
-    }
-
-    public HtmlFetcher setCache(SCache cache) {
-        this.cache = cache;
-        return this;
     }
 
     public int getCacheCounter() {
@@ -195,13 +153,25 @@ public class HtmlFetcher {
         return this;
     }
 
+    public HtmlFetcher setMaxTextLength(int maxTextLength) {
+        this.maxTextLength = maxTextLength;
+        return this;
+    }
+
     public int getMaxTextLength() {
         return maxTextLength;
     }
 
-    public HtmlFetcher setMaxTextLength(int maxTextLength) {
-        this.maxTextLength = maxTextLength;
-        return this;
+    public void setAccept(String accept) {
+        this.accept = accept;
+    }
+
+    public void setCharset(String charset) {
+        this.charset = charset;
+    }
+
+    public void setCacheControl(String cacheControl) {
+        this.cacheControl = cacheControl;
     }
 
     public String getLanguage() {
@@ -233,24 +203,12 @@ public class HtmlFetcher {
         return accept;
     }
 
-    public void setAccept(String accept) {
-        this.accept = accept;
-    }
-
     public String getCacheControl() {
         return cacheControl;
     }
 
-    public void setCacheControl(String cacheControl) {
-        this.cacheControl = cacheControl;
-    }
-
     public String getCharset() {
         return charset;
-    }
-
-    public void setCharset(String charset) {
-        this.charset = charset;
     }
 
     public JResult fetchAndExtract(String url, int timeout, boolean resolve) throws Exception {
@@ -352,6 +310,20 @@ public class HtmlFetcher {
         return result;
     }
 
+    // Ugly hack to break free from any cached versions, a few URLs required this.
+    private static String getURLtoBreakCache(String url) {
+        try {
+            URL aURL = new URL(url);
+            if (aURL.getQuery() != null && aURL.getQuery().isEmpty()) {
+                return url + "?1";
+            } else {
+                return url + "&1";
+            }
+        } catch (MalformedURLException e) {
+            return url;
+        }
+    }
+
     private String lessText(String text) {
         if (text == null)
             return "";
@@ -360,6 +332,10 @@ public class HtmlFetcher {
             return text.substring(0, maxTextLength);
 
         return text;
+    }
+
+    private static String fixUrl(String url, String urlOrPath) {
+        return SHelper.useDomainOfFirstArg4Second(url, urlOrPath);
     }
 
     private String fetchAsString(String urlAsString, int timeout)
@@ -384,6 +360,10 @@ public class HtmlFetcher {
 
         String enc = Converter.extractEncoding(hConn.getContentType());
         return createConverter(urlAsString).streamToString(is, enc);
+    }
+
+    private static Converter createConverter(String url) {
+        return new Converter(url);
     }
 
     /**
@@ -439,6 +419,26 @@ public class HtmlFetcher {
         } catch (Exception ex) {
             return "";
         }
+    }
+
+    /**
+     * Takes a URI that was decoded as ISO-8859-1 and applies percent-encoding
+     * to non-ASCII characters. Workaround for broken origin servers that send
+     * UTF-8 in the Location: header.
+     */
+    private static String encodeUriFromHeader(String badLocation) {
+        StringBuilder sb = new StringBuilder(badLocation.length());
+
+        for (char ch : badLocation.toCharArray()) {
+            if (ch < (char) 128) {
+                sb.append(ch);
+            } else {
+                // this is ONLY valid if the uri was decoded using ISO-8859-1
+                sb.append(String.format("%%%02X", (int) ch));
+            }
+        }
+
+        return sb.toString();
     }
 
     private HttpURLConnection createUrlConnection(String urlAsStr, int timeout,

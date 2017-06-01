@@ -17,7 +17,7 @@
 -->
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+      xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
         android:id="@+id/action_back"
@@ -26,7 +26,7 @@
         android:icon="@drawable/ic_action_back"
         android:title="@string/action_back"
         android:visible="true"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="ifRoom"/>
     <item
         android:id="@+id/action_forward"
         android:checkable="false"
@@ -34,39 +34,39 @@
         android:icon="@drawable/ic_action_forward"
         android:title="@string/action_forward"
         android:visible="true"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="ifRoom"/>
     <item
         android:id="@+id/action_new_tab"
-        android:title="@string/action_new_tab" />
+        android:title="@string/action_new_tab"/>
     <item
         android:id="@+id/action_incognito"
-        android:title="@string/action_incognito" />
+        android:title="@string/action_incognito"/>
     <item
         android:id="@+id/action_share"
-        android:title="@string/action_share" />
+        android:title="@string/action_share"/>
     <item
         android:id="@+id/action_history"
-        android:title="@string/action_history" />
+        android:title="@string/action_history"/>
     <item
         android:id="@+id/action_find"
-        android:title="@string/action_find" />
+        android:title="@string/action_find"/>
     <item
         android:id="@+id/action_copy"
-        android:title="@string/action_copy" />
+        android:title="@string/action_copy"/>
     <item
         android:id="@+id/action_add_to_homescreen"
-        android:title="@string/action_add_to_homescreen" />
+        android:title="@string/action_add_to_homescreen"/>
     <item
         android:id="@+id/action_bookmarks"
-        android:title="@string/action_bookmarks" />
+        android:title="@string/action_bookmarks"/>
     <item
         android:id="@+id/action_add_bookmark"
-        android:title="@string/action_add_bookmark" />
+        android:title="@string/action_add_bookmark"/>
     <item
         android:id="@+id/action_reading_mode"
-        android:title="@string/reading_mode" />
+        android:title="@string/reading_mode"/>
     <item
         android:id="@+id/action_settings"
-        android:title="@string/settings" />
+        android:title="@string/settings"/>
 
 </menu>

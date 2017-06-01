@@ -31,8 +31,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.squareup.otto.Bus;
-
 import javax.inject.Inject;
 
 import kttech.software.ktbrowser.R;
@@ -48,17 +46,31 @@ import kttech.software.ktbrowser.utils.ThemeUtils;
 import kttech.software.ktbrowser.utils.Utils;
 import kttech.software.ktbrowser.view.BackgroundDrawable;
 import kttech.software.ktbrowser.view.LightningView;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
 
 /**
  * A fragment that holds and manages the tabs and interaction with the tabs.
  * It is reliant on the BrowserController in order to get the current UI state
- * of the software. It also uses the BrowserController to signal that the UI needs
+ * of the browser. It also uses the BrowserController to signal that the UI needs
  * to change. This class contains the adapter used by both the drawer tabs and
  * the desktop tabs. It delegates touch events for the tab UI appropriately.
  */
 public class TabsFragment extends Fragment implements View.OnClickListener, View.OnLongClickListener, TabsView {
 
-    private static final String TAG = TabsFragment.class.getSimpleName();
+    @NonNull
+    public static TabsFragment createTabsFragment(boolean isIncognito, boolean showTabsInDrawer) {
+        TabsFragment tabsFragment = new TabsFragment();
+        final Bundle tabsFragmentArguments = new Bundle();
+        tabsFragmentArguments.putBoolean(TabsFragment.IS_INCOGNITO, isIncognito);
+        tabsFragmentArguments.putBoolean(TabsFragment.VERTICAL_MODE, showTabsInDrawer);
+        tabsFragment.setArguments(tabsFragmentArguments);
+
+        return tabsFragment;
+    }
+
+    private static final String TAG = "TabsFragment";
 
     /**
      * Arguments boolean to tell the fragment it is displayed in the drawner or on the tab strip
@@ -66,19 +78,20 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
      */
     public static final String VERTICAL_MODE = TAG + ".VERTICAL_MODE";
     public static final String IS_INCOGNITO = TAG + ".IS_INCOGNITO";
-    @Inject
-    Bus mBus;
-    @Inject
-    PreferenceManager mPreferences;
+
     private boolean mIsIncognito, mDarkTheme;
     private int mIconColor;
     private boolean mColorMode = true;
     private boolean mShowInNavigationDrawer;
-    @Nullable
-    private LightningViewAdapter mTabsAdapter;
+
+    @Nullable private LightningViewAdapter mTabsAdapter;
     private UIController mUiController;
-    private RecyclerView mRecyclerView;
+
+    @BindView(R.id.tabs_list) RecyclerView mRecyclerView;
+    private Unbinder mUnbinder;
+
     private TabsManager mTabsManager;
+    @Inject PreferenceManager mPreferences;
 
     public TabsFragment() {
         BrowserApp.getAppComponent().inject(this);
@@ -97,8 +110,8 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
         mColorMode = mPreferences.getColorModeEnabled();
         mColorMode &= !mDarkTheme;
         mIconColor = mDarkTheme ?
-                ThemeUtils.getIconDarkThemeColor(context) :
-                ThemeUtils.getIconLightThemeColor(context);
+            ThemeUtils.getIconDarkThemeColor(context) :
+            ThemeUtils.getIconLightThemeColor(context);
     }
 
     @Nullable
@@ -126,7 +139,9 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
                 }
             });
         }
-        mRecyclerView = (RecyclerView) view.findViewById(R.id.tabs_list);
+
+        mUnbinder = ButterKnife.bind(this, view);
+
         SimpleItemAnimator animator;
         if (mShowInNavigationDrawer) {
             animator = new VerticalItemAnimator();
@@ -144,7 +159,18 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
         mTabsAdapter = new LightningViewAdapter(mShowInNavigationDrawer);
         mRecyclerView.setAdapter(mTabsAdapter);
         mRecyclerView.setHasFixedSize(true);
+
         return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (mUnbinder != null) {
+            mUnbinder.unbind();
+            mUnbinder = null;
+        }
+        mTabsAdapter = null;
     }
 
     private TabsManager getTabsManager() {
@@ -164,30 +190,12 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        mTabsAdapter = null;
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        mBus.register(this);
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         // Force adapter refresh
         if (mTabsAdapter != null) {
             mTabsAdapter.notifyDataSetChanged();
         }
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        mBus.unregister(this);
     }
 
     @Override
@@ -206,8 +214,8 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
         mColorMode = mPreferences.getColorModeEnabled();
         mColorMode &= !mDarkTheme;
         mIconColor = mDarkTheme ?
-                ThemeUtils.getIconDarkThemeColor(activity) :
-                ThemeUtils.getIconLightThemeColor(activity);
+            ThemeUtils.getIconDarkThemeColor(activity) :
+            ThemeUtils.getIconLightThemeColor(activity);
         if (mTabsAdapter != null) {
             mTabsAdapter.notifyDataSetChanged();
         }
@@ -276,16 +284,15 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
 
     private class LightningViewAdapter extends RecyclerView.Adapter<LightningViewAdapter.LightningViewHolder> {
 
-        private static final float DESATURATED = 0.5f;
         private final int mLayoutResourceId;
-        @Nullable
-        private final Drawable mBackgroundTabDrawable;
-        @Nullable
-        private final Bitmap mForegroundTabBitmap;
-        private final boolean mDrawerTabs;
+        @Nullable private final Drawable mBackgroundTabDrawable;
+        @Nullable private final Bitmap mForegroundTabBitmap;
         private ColorMatrix mColorMatrix;
         private Paint mPaint;
         private ColorFilter mFilter;
+        private static final float DESATURATED = 0.5f;
+
+        private final boolean mDrawerTabs;
 
         public LightningViewAdapter(final boolean vertical) {
             this.mLayoutResourceId = vertical ? R.layout.tab_list_item : R.layout.tab_list_item_horizontal;
@@ -373,7 +380,7 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
 
         public Bitmap getDesaturatedBitmap(@NonNull Bitmap favicon) {
             Bitmap grayscaleBitmap = Bitmap.createBitmap(favicon.getWidth(),
-                    favicon.getHeight(), Bitmap.Config.ARGB_8888);
+                favicon.getHeight(), Bitmap.Config.ARGB_8888);
 
             Canvas c = new Canvas(grayscaleBitmap);
             if (mColorMatrix == null || mFilter == null || mPaint == null) {
@@ -390,17 +397,6 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
 
         public class LightningViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
 
-            @NonNull
-            final TextView txtTitle;
-            @NonNull
-            final ImageView favicon;
-            @NonNull
-            final ImageView exit;
-            @NonNull
-            final FrameLayout exitButton;
-            @NonNull
-            final LinearLayout layout;
-
             public LightningViewHolder(@NonNull View view) {
                 super(view);
                 txtTitle = (TextView) view.findViewById(R.id.textTab);
@@ -414,6 +410,12 @@ public class TabsFragment extends Fragment implements View.OnClickListener, View
                 layout.setOnClickListener(this);
                 layout.setOnLongClickListener(this);
             }
+
+            @NonNull final TextView txtTitle;
+            @NonNull final ImageView favicon;
+            @NonNull final ImageView exit;
+            @NonNull final FrameLayout exitButton;
+            @NonNull final LinearLayout layout;
 
             @Override
             public void onClick(View v) {

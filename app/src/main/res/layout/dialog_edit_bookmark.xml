@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="10dp">
+    android:padding="@dimen/dialog_padding">
 
     <EditText
         android:id="@+id/bookmark_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/hint_title"
-        android:singleLine="true" />
+        android:maxLines="1"
+        android:singleLine="true"/>
 
     <EditText
         android:id="@+id/bookmark_url"
@@ -18,12 +20,14 @@
         android:layout_height="wrap_content"
         android:hint="@string/hint_url"
         android:inputType="textUri"
-        android:singleLine="true" />
+        android:maxLines="1"
+        android:singleLine="true"/>
 
     <AutoCompleteTextView
         android:id="@+id/bookmark_folder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/folder"
-        android:singleLine="true" />
+        android:maxLines="1"
+        android:singleLine="true"/>
 </LinearLayout>

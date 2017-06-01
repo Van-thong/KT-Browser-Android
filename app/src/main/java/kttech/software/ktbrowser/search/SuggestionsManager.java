@@ -1,16 +1,14 @@
 package kttech.software.ktbrowser.search;
 
 import android.app.Application;
-import android.content.Context;
 import android.support.annotation.NonNull;
 
-import com.anthonycr.bonsai.Action;
-import com.anthonycr.bonsai.Observable;
-import com.anthonycr.bonsai.Subscriber;
+import com.anthonycr.bonsai.Single;
+import com.anthonycr.bonsai.SingleAction;
+import com.anthonycr.bonsai.SingleSubscriber;
 
 import java.util.List;
 
-import kttech.software.ktbrowser.app.BrowserApp;
 import kttech.software.ktbrowser.database.HistoryItem;
 
 class SuggestionsManager {
@@ -21,39 +19,34 @@ class SuggestionsManager {
         return sIsTaskExecuting;
     }
 
-    static Observable<List<HistoryItem>> getObservable(@NonNull final String query, @NonNull final Context context, @NonNull final Source source) {
-        final Application application = BrowserApp.get(context);
-        return Observable.create(new Action<List<HistoryItem>>() {
+    @NonNull
+    static Single<List<HistoryItem>> createGoogleQueryObservable(@NonNull final String query,
+                                                                 @NonNull final Application application) {
+        return Single.create(new SingleAction<List<HistoryItem>>() {
             @Override
-            public void onSubscribe(@NonNull final Subscriber<List<HistoryItem>> subscriber) {
+            public void onSubscribe(@NonNull final SingleSubscriber<List<HistoryItem>> subscriber) {
                 sIsTaskExecuting = true;
-                switch (source) {
-                    case GOOGLE:
-                        new GoogleSuggestionsTask(query, application, new SuggestionsResult() {
-                            @Override
-                            public void resultReceived(@NonNull List<HistoryItem> searchResults) {
-                                subscriber.onNext(searchResults);
-                                subscriber.onComplete();
-                            }
-                        }).run();
-                        break;
-                    case DUCK:
-                        new DuckSuggestionsTask(query, application, new SuggestionsResult() {
-                            @Override
-                            public void resultReceived(@NonNull List<HistoryItem> searchResults) {
-                                subscriber.onNext(searchResults);
-                                subscriber.onComplete();
-                            }
-                        }).run();
-                }
+                List<HistoryItem> results = new GoogleSuggestionsModel(application).getResults(query);
+                subscriber.onItem(results);
+                subscriber.onComplete();
                 sIsTaskExecuting = false;
             }
         });
     }
 
-    public enum Source {
-        GOOGLE,
-        DUCK
+    @NonNull
+    static Single<List<HistoryItem>> createDuckQueryObservable(@NonNull final String query,
+                                                               @NonNull final Application application) {
+        return Single.create(new SingleAction<List<HistoryItem>>() {
+            @Override
+            public void onSubscribe(@NonNull final SingleSubscriber<List<HistoryItem>> subscriber) {
+                sIsTaskExecuting = true;
+                List<HistoryItem> results = new DuckSuggestionsModel(application).getResults(query);
+                subscriber.onItem(results);
+                subscriber.onComplete();
+                sIsTaskExecuting = false;
+            }
+        });
     }
 
 }

@@ -8,19 +8,20 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.webkit.WebView;
 
-import javax.inject.Inject;
+import com.anthonycr.bonsai.Completable;
+import com.anthonycr.bonsai.CompletableAction;
+import com.anthonycr.bonsai.CompletableOnSubscribe;
+import com.anthonycr.bonsai.CompletableSubscriber;
+import com.anthonycr.bonsai.Schedulers;
 
 import kttech.software.ktbrowser.R;
 import kttech.software.ktbrowser.app.BrowserApp;
-import kttech.software.ktbrowser.database.HistoryDatabase;
 import kttech.software.ktbrowser.dialog.BrowserDialog;
 import kttech.software.ktbrowser.utils.Utils;
 import kttech.software.ktbrowser.utils.WebUtils;
@@ -41,10 +42,8 @@ public class PrivacySettingsFragment extends LightningPreferenceFragment impleme
     private static final String SETTINGS_WEBSTORAGEEXIT = "clear_webstorage_exit";
     private static final String SETTINGS_DONOTTRACK = "do_not_track";
     private static final String SETTINGS_IDENTIFYINGHEADERS = "remove_identifying_headers";
-    @Inject
-    HistoryDatabase mHistoryDatabase;
+
     private Activity mActivity;
-    private Handler mMessageHandler;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -107,7 +106,6 @@ public class PrivacySettingsFragment extends LightningPreferenceFragment impleme
 
         cb3cookies.setEnabled(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
 
-        mMessageHandler = new MessageHandler(mActivity);
     }
 
     @Override
@@ -134,19 +132,22 @@ public class PrivacySettingsFragment extends LightningPreferenceFragment impleme
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
         builder.setTitle(getResources().getString(R.string.title_clear_history));
         Dialog dialog = builder.setMessage(getResources().getString(R.string.dialog_history))
-                .setPositiveButton(getResources().getString(R.string.action_yes),
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface arg0, int arg1) {
-                                BrowserApp.getIOThread().execute(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        clearHistory();
-                                    }
-                                });
-                            }
-                        })
-                .setNegativeButton(getResources().getString(R.string.action_no), null).show();
+            .setPositiveButton(getResources().getString(R.string.action_yes),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface arg0, int arg1) {
+                        clearHistory()
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(Schedulers.main())
+                            .subscribe(new CompletableOnSubscribe() {
+                                @Override
+                                public void onComplete() {
+                                    Utils.showSnackbar(getActivity(), R.string.message_clear_history);
+                                }
+                            });
+                    }
+                })
+            .setNegativeButton(getResources().getString(R.string.action_no), null).show();
         BrowserDialog.setDialogSize(mActivity, dialog);
     }
 
@@ -154,19 +155,22 @@ public class PrivacySettingsFragment extends LightningPreferenceFragment impleme
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
         builder.setTitle(getResources().getString(R.string.title_clear_cookies));
         builder.setMessage(getResources().getString(R.string.dialog_cookies))
-                .setPositiveButton(getResources().getString(R.string.action_yes),
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface arg0, int arg1) {
-                                BrowserApp.getTaskThread().execute(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        clearCookies();
-                                    }
-                                });
-                            }
-                        })
-                .setNegativeButton(getResources().getString(R.string.action_no), null).show();
+            .setPositiveButton(getResources().getString(R.string.action_yes),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface arg0, int arg1) {
+                        clearCookies()
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(Schedulers.main())
+                            .subscribe(new CompletableOnSubscribe() {
+                                @Override
+                                public void onComplete() {
+                                    Utils.showSnackbar(getActivity(), R.string.message_cookies_cleared);
+                                }
+                            });
+                    }
+                })
+            .setNegativeButton(getResources().getString(R.string.action_no), null).show();
     }
 
     private void clearCache() {
@@ -176,14 +180,34 @@ public class PrivacySettingsFragment extends LightningPreferenceFragment impleme
         Utils.showSnackbar(mActivity, R.string.message_cache_cleared);
     }
 
-    private void clearHistory() {
-        WebUtils.clearHistory(getActivity(), mHistoryDatabase);
-        mMessageHandler.sendEmptyMessage(1);
+    @NonNull
+    private Completable clearHistory() {
+        return Completable.create(new CompletableAction() {
+            @Override
+            public void onSubscribe(@NonNull CompletableSubscriber subscriber) {
+                Activity activity = getActivity();
+                if (activity != null) {
+                    WebUtils.clearHistory(activity);
+                    subscriber.onComplete();
+                }
+                subscriber.onError(new RuntimeException("Activity was null in clearHistory"));
+            }
+        });
     }
 
-    private void clearCookies() {
-        WebUtils.clearCookies(getActivity());
-        mMessageHandler.sendEmptyMessage(2);
+    @NonNull
+    private Completable clearCookies() {
+        return Completable.create(new CompletableAction() {
+            @Override
+            public void onSubscribe(@NonNull CompletableSubscriber subscriber) {
+                Activity activity = getActivity();
+                if (activity != null) {
+                    WebUtils.clearCookies(activity);
+                    subscriber.onComplete();
+                }
+                subscriber.onError(new RuntimeException("Activity was null in clearCookies"));
+            }
+        });
     }
 
     private void clearWebStorage() {
@@ -223,28 +247,6 @@ public class PrivacySettingsFragment extends LightningPreferenceFragment impleme
                 return true;
             default:
                 return false;
-        }
-    }
-
-    private static class MessageHandler extends Handler {
-
-        final Activity mHandlerContext;
-
-        public MessageHandler(Activity context) {
-            this.mHandlerContext = context;
-        }
-
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            switch (msg.what) {
-                case 1:
-                    Utils.showSnackbar(mHandlerContext, R.string.message_clear_history);
-                    break;
-                case 2:
-                    Utils.showSnackbar(mHandlerContext, R.string.message_cookies_cleared);
-                    break;
-            }
-            super.handleMessage(msg);
         }
     }
 }

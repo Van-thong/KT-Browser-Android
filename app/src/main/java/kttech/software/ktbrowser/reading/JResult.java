@@ -16,12 +16,12 @@
 package kttech.software.ktbrowser.reading;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 
@@ -32,7 +32,6 @@ import java.util.Map;
  */
 public class JResult implements Serializable {
 
-    private final List<Map<String, String>> links = new ArrayList<>();
     private String title;
     private String url;
     private String originalUrl;
@@ -48,6 +47,7 @@ public class JResult implements Serializable {
     private Date date;
     private Collection<String> keywords;
     private List<ImageResult> images = null;
+    private final List<Map<String, String>> links = new ArrayList<>();
     private String type;
     private String sitename;
     private String language;
@@ -66,22 +66,22 @@ public class JResult implements Serializable {
         return this;
     }
 
-    public String getOriginalUrl() {
-        return originalUrl;
-    }
-
     public JResult setOriginalUrl(String originalUrl) {
         this.originalUrl = originalUrl;
         return this;
     }
 
-    public String getCanonicalUrl() {
-        return canonicalUrl;
+    public String getOriginalUrl() {
+        return originalUrl;
     }
 
     public JResult setCanonicalUrl(String canonicalUrl) {
         this.canonicalUrl = canonicalUrl;
         return this;
+    }
+
+    public String getCanonicalUrl() {
+        return canonicalUrl;
     }
 
     public String getFaviconUrl() {
@@ -95,15 +95,15 @@ public class JResult implements Serializable {
         return this;
     }
 
+    public JResult setRssUrl(String rssUrl) {
+        this.rssUrl = rssUrl;
+        return this;
+    }
+
     public String getRssUrl() {
         if (rssUrl == null)
             return "";
         return rssUrl;
-    }
-
-    public JResult setRssUrl(String rssUrl) {
-        this.rssUrl = rssUrl;
-        return this;
     }
 
     public String getDescription() {
@@ -184,6 +184,11 @@ public class JResult implements Serializable {
         return this;
     }
 
+    public JResult setDate(Date date) {
+        this.date = date;
+        return this;
+    }
+
     public Collection<String> getKeywords() {
         return keywords;
     }
@@ -199,11 +204,6 @@ public class JResult implements Serializable {
         return date;
     }
 
-    public JResult setDate(Date date) {
-        this.date = date;
-        return this;
-    }
-
     /**
      * @return images list
      */
@@ -214,19 +214,19 @@ public class JResult implements Serializable {
     }
 
     /**
-     * set images list
-     */
-    public void setImages(List<ImageResult> images) {
-        this.images = images;
-    }
-
-    /**
      * @return images count
      */
     public int getImagesCount() {
         if (images == null)
             return 0;
         return images.size();
+    }
+
+    /**
+     * set images list
+     */
+    public void setImages(List<ImageResult> images) {
+        this.images = images;
     }
 
     public void addLink(String url, String text, Integer pos) {

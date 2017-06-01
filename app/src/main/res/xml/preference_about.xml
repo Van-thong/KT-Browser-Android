@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--suppress AndroidElementNotAllowed -->
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory android:title="@string/settings_about">
@@ -7,18 +8,7 @@
             android:title="@string/action_follow_me">
             <intent
                 android:action="android.intent.action.VIEW"
-                android:data="http://fb.com/khoaakt">
-                <extra
-                    android:name="SOURCE"
-                    android:value="SELF" />
-            </intent>
-        </Preference>
-        <Preference
-            android:summary="kt-browser.com"
-            android:title="Trang chủ">
-            <intent
-                android:action="android.intent.action.VIEW"
-                android:data="http://kt-browser.com">
+                android:data="@string/url_website">
                 <extra
                     android:name="SOURCE"
                     android:value="SELF" />
@@ -32,17 +22,6 @@
         <Preference
             android:summary="@string/mpl_license"
             android:title="@string/app_name">
-            <intent
-                android:action="android.intent.action.VIEW"
-                android:data="http://www.mozilla.org/MPL/2.0/">
-                <extra
-                    android:name="SOURCE"
-                    android:value="SELF" />
-            </intent>
-        </Preference>
-        <Preference
-            android:summary="@string/mpl_license"
-            android:title="Lightning Browser - Anthony Restaino">
             <intent
                 android:action="android.intent.action.VIEW"
                 android:data="http://www.mozilla.org/MPL/2.0/">

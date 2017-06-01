@@ -23,7 +23,7 @@ import kttech.software.ktbrowser.app.BrowserApp;
 
 public class SettingsActivity extends ThemableSettingsActivity {
 
-    private static final List<String> mFragments = new ArrayList<>(7);
+    @NonNull private static final List<String> mFragments = new ArrayList<>(7);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

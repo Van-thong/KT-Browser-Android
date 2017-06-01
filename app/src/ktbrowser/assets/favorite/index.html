@@ -1,0 +1,102 @@
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<head>
+    <style>
+        .bottom {
+            width: auto;
+            height: auto;
+            position: fixed;
+            left: 50%;
+            bottom: 0px;
+            margin: 0 auto;
+            transform: translate(-50%, -10%);
+            background: #263832;
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            border-radius: 5px;
+            word-spacing: 15px;
+        }
+        
+        .img {
+            height: auto;
+            width: 60px;
+            -webkit-transition: all 0s;
+            transition: all 0s;
+        }
+        
+        .img:hover {
+            filter: brightness(130%);
+            -webkit-filter: brightness(130%);
+            -moz-filter: brightness(130%);
+            -o-filter: brightness(130%);
+            -ms-filter: brightness(130%);
+            -webkit-transition: all 0.2s;
+            transition: all 0.2s;
+        }
+        
+        @media only screen and (max-width: 980px) {
+            .bottom {
+                width: auto;
+            }
+            .img {
+                width: 60px;
+            }
+        }
+        
+        @media only screen and (max-width: 720px) {
+            .bottom {
+                width: 300px;
+            }
+            .img {
+                height: auto;
+                width: 60px;
+            }
+        }
+        
+        @media only screen and (max-width: 480px) {
+            .bottom {
+                width: 280px;
+            }
+            .img {
+                height: auto;
+                width: 55px;
+            }
+        }
+        
+        @media only screen and (max-width: 320px) {
+            .bottom {
+                width: 225px;
+                word-spacing: 10px;
+            }
+            .img {
+                height: auto;
+                width: 45px;
+            }
+        }
+        
+        div {
+            background: url(fb-icon.png) center center no-repeat;
+            background-size: contain;
+            width: 48px;
+        }
+        
+        img {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="image"></div>
+    <div class="bottom">
+        <a href="http://fb.com" target="_self"><img src="fb-icon.png" class="img" /></a>
+        <a href="http://mp3.zing.vn" target="_self"><img src="zing-icon.png" class="img" /></a>
+        <a href="http://youtube.com" target="_self"><img src="youtube-icon.png" class="img" /></a>
+        <a href="http://kt-browser.com" target="_self"><img src="kt-icon.png" class="img" /></a>
+    </div>
+</body>
+
+</html>
