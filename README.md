@@ -6,7 +6,7 @@
 
 #### Tải về
 
-* [Tải từ Google Play](https://play.google.com/store/apps/details?id=kttech.software.ktbrowser)
+* [Tải từ Google Play (Chưa cập nhật)](https://play.google.com/store/apps/details?id=kttech.software.ktbrowser)
 * [Tải từ trang chủ](http://android.kt-browser.com/mirror/ktbrowser.apk)
 
 #### Các tính năng
