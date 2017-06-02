@@ -2,13 +2,18 @@
 
 #### Một trình duyệt web chống quảng cáo, an toàn dành cho hệ điều hành Android của nhóm KTTECH.
 
-![](ic_launcher_small.png)
+![](ic_launcher_kt_small.png)
 
 #### Tải về
 
 * [Tải từ Google Play](https://play.google.com/store/apps/details?id=kttech.software.ktbrowser)
+* [Tải từ trang chủ](http://android.kt-browser.com/mirror/ktbrowser.apk)
 
 #### Các tính năng
+
+* Adobe Flash (Hỗ trợ Android 4.4 trở xuống)
+
+* Chặn quảng cáo (Đã cập nhật thêm trong phiên bản 6.5)
 
 * Dấu trang
 
@@ -54,18 +59,6 @@
 Copyright 2016 Nguyễn Anh Khoa
 
 KT Browser (Android Version)
-
-   This Source Code Form is subject to the terms of the 
-   Mozilla Public License, v. 2.0. If a copy of the MPL 
-   was not distributed with this file, You can obtain one at 
-   
-   http://mozilla.org/MPL/2.0/
-````
-
-````
-Copyright 2014 Anthony Restaino
-
-Lightning Browser
 
    This Source Code Form is subject to the terms of the 
    Mozilla Public License, v. 2.0. If a copy of the MPL 
