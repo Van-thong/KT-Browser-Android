@@ -1,4 +1,4 @@
-# KT Browser
+* #[KT Browser](http://android.kt-browser.com)
 
 #### Một trình duyệt web chống quảng cáo, an toàn dành cho hệ điều hành Android của nhóm KTTECH.
 
