@@ -30,7 +30,7 @@ android {
     productFlavors {
         ktbrowser {
             buildConfigField "boolean", "FULL_VERSION", "Boolean.parseBoolean(\"true\")"
-            applicationId "kttech.software.ktbrowser"
+            applicationId "kttech.browser.ktbrowser"
             versionCode 91
         }
     }
